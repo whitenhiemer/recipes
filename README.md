@@ -55,7 +55,7 @@ You can also add recipes directly from the website using the "+ New Recipe" butt
 - **Print-friendly** -- branded single-page shopping list (side-by-side trips, compact layout with logo)
 - **Recipe creation** -- step-by-step wizard, markdown file upload, or import from URL
 - **URL import** -- paste a recipe URL to extract data via JSON-LD; source attribution on recipe detail pages
-- **Recipe search** -- search Google for recipes and import directly from the results
+- **Inline recipe search** -- search for recipes online with top 3 suggestions and one-click fetch to import
 - **Recipe scaling** -- default 5 servings with +/- control; ingredient quantities scale with fraction display
 - **Kitchen mode** -- screen wake lock keeps your phone awake while cooking
 - **Mobile-first** -- responsive design with touch-friendly controls

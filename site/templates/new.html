@@ -504,12 +504,74 @@ document.getElementById('import-form').addEventListener('submit', function(e) {
     fetchRecipePreview();
 });
 
-function searchRecipesOnline() {
+async function searchRecipesOnline() {
     const query = document.getElementById('import-search-input').value.trim();
     if (!query) { document.getElementById('import-search-input').focus(); return; }
 
-    const searchURL = 'https://www.google.com/search?q=' + encodeURIComponent(query + ' recipe');
-    window.open(searchURL, '_blank');
+    const resultsDiv = document.getElementById('import-search-results');
+    resultsDiv.style.display = '';
+    resultsDiv.textContent = 'Searching...';
+
+    try {
+        const resp = await fetch('/api/recipe/search-online', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query })
+        });
+
+        if (!resp.ok) {
+            resultsDiv.textContent = 'Search failed. Try again.';
+            return;
+        }
+
+        const results = await resp.json();
+        resultsDiv.textContent = '';
+
+        if (!results || results.length === 0) {
+            resultsDiv.textContent = 'No recipe results found. Try different keywords.';
+            return;
+        }
+
+        results.forEach(function(r) {
+            var card = document.createElement('div');
+            card.className = 'search-result-card';
+
+            var info = document.createElement('div');
+            info.className = 'search-result-info';
+
+            var title = document.createElement('div');
+            title.className = 'search-result-title';
+            title.textContent = r.title;
+            info.appendChild(title);
+
+            var host = '';
+            try { host = new URL(r.url).hostname; } catch(e) { host = r.url; }
+            var domain = document.createElement('div');
+            domain.className = 'search-result-domain';
+            domain.textContent = host;
+            info.appendChild(domain);
+
+            if (r.desc) {
+                var desc = document.createElement('div');
+                desc.className = 'search-result-desc';
+                desc.textContent = r.desc;
+                info.appendChild(desc);
+            }
+
+            card.appendChild(info);
+
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'search-result-fetch';
+            btn.textContent = 'Fetch';
+            btn.onclick = function() { useSearchResult(r.url); };
+            card.appendChild(btn);
+
+            resultsDiv.appendChild(card);
+        });
+    } catch (err) {
+        resultsDiv.textContent = 'Search error: ' + err.message;
+    }
 }
 
 function useSearchResult(url) {

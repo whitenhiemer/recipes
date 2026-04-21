@@ -49,6 +49,7 @@ GET  /new                           Recipe creation wizard
 GET  /pantry                        Pantry & fridge inventory (localStorage)
 POST /api/recipe                    Create recipe (JSON: title, category, markdown)
 POST /api/recipe/import-url         Import recipe from external URL (JSON-LD extraction)
+POST /api/recipe/search-online      Search for recipes online (returns top 3 results)
 POST /api/image                     Upload recipe image
 POST /webhook                       GitHub push webhook (HMAC-SHA256)
 GET  /static/*                      Static assets
@@ -133,9 +134,13 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [x] Gas tank reminder for Libby on shopping list printouts
 - [x] Meal plan dropdown selects with category-grouped recipe choices
 - [x] Recipe URL import via JSON-LD extraction with source attribution
-- [x] Google recipe search integration on import tab
+- [x] Inline recipe search with top 3 suggestions and fetch buttons (DuckDuckGo backend)
 - [x] Recipe scaling (default 5 servings, +/- control, fraction display)
 - [x] Fix metadata regex to parse Servings/PrepTime/CookTime from AST text
+- [x] Print preview for shopping lists (inline, DOM-built)
+- [x] Treats section in meal plan (2 slots for desserts & snacks)
+- [x] Capsaicin detection with "Tamlin Safe" / "Not Tamlin Safe" badges and banners
+- [x] Smart serving defaults (personal recipes 1-2 servings keep original, family recipes default to 5)
 
 ### TODO
 
