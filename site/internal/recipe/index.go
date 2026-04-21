@@ -186,6 +186,71 @@ func (idx *Index) GenerateShoppingList(slugs []string) *ShoppingList {
 	return list
 }
 
+func (idx *Index) GenerateShoppingTrips(trip1Slugs, trip2Slugs []string) (trip1 *ShoppingList, trip2 *ShoppingList) {
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+
+	type itemInfo struct {
+		trip1Amounts []string
+		trip2Amounts []string
+	}
+
+	items := make(map[string]*itemInfo)
+	order := []string{}
+
+	addSlugs := func(slugs []string, trip int) {
+		for _, slug := range slugs {
+			r, ok := idx.BySlug[slug]
+			if !ok {
+				continue
+			}
+			for _, ing := range r.Ingredients {
+				name := strings.ToLower(ing.Name)
+				if _, exists := items[name]; !exists {
+					items[name] = &itemInfo{}
+					order = append(order, name)
+				}
+				info := items[name]
+				amount := ing.Raw
+				if r.Title != "" {
+					amount = ing.Raw + " (" + r.Title + ")"
+				}
+				if trip == 1 {
+					info.trip1Amounts = append(info.trip1Amounts, amount)
+				} else {
+					info.trip2Amounts = append(info.trip2Amounts, amount)
+				}
+			}
+		}
+	}
+
+	addSlugs(trip1Slugs, 1)
+	addSlugs(trip2Slugs, 2)
+
+	trip1 = &ShoppingList{}
+	trip2 = &ShoppingList{}
+
+	for _, name := range order {
+		info := items[name]
+		dept := IngredientDepartment(name)
+		perishable := IsPerishableDepartment(dept)
+		allAmounts := append(info.trip1Amounts, info.trip2Amounts...)
+
+		if !perishable {
+			trip1.Items = append(trip1.Items, ShoppingItem{Name: name, Amounts: allAmounts})
+		} else {
+			if len(info.trip1Amounts) > 0 {
+				trip1.Items = append(trip1.Items, ShoppingItem{Name: name, Amounts: info.trip1Amounts})
+			}
+			if len(info.trip2Amounts) > 0 {
+				trip2.Items = append(trip2.Items, ShoppingItem{Name: name, Amounts: info.trip2Amounts})
+			}
+		}
+	}
+
+	return trip1, trip2
+}
+
 func tokenize(r *Recipe) []string {
 	var tokens []string
 

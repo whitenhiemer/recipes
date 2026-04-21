@@ -128,11 +128,46 @@ func (s *Server) handlePantry(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleShoppingList(w http.ResponseWriter, r *http.Request) {
 	slugParam := r.URL.Query().Get("slugs")
-	if slugParam == "" {
+	trip1Param := r.URL.Query().Get("trip1")
+	trip2Param := r.URL.Query().Get("trip2")
+
+	hasTrips := trip1Param != "" || trip2Param != ""
+
+	if slugParam == "" && !hasTrips {
 		data := map[string]interface{}{
 			"Title":    "Shopping List",
 			"Items":    nil,
 			"HasSaved": true,
+		}
+		s.render(w, "shopping", data)
+		return
+	}
+
+	if hasTrips {
+		var t1Slugs, t2Slugs []string
+		if trip1Param != "" {
+			t1Slugs = strings.Split(trip1Param, ",")
+		}
+		if trip2Param != "" {
+			t2Slugs = strings.Split(trip2Param, ",")
+		}
+
+		trip1List, trip2List := s.idx.GenerateShoppingTrips(t1Slugs, t2Slugs)
+		trip1Priced, trip1Total := recipe.PriceShoppingList(trip1List)
+		trip2Priced, trip2Total := recipe.PriceShoppingList(trip2List)
+		trip1Depts := recipe.GroupByDepartment(trip1Priced)
+		trip2Depts := recipe.GroupByDepartment(trip2Priced)
+
+		data := map[string]interface{}{
+			"Title":           "Shopping List",
+			"Items":           trip1List.Items,
+			"HasTrips":        true,
+			"Trip1Departments": trip1Depts,
+			"Trip1Total":      trip1Total,
+			"Trip2Departments": trip2Depts,
+			"Trip2Total":      trip2Total,
+			"EstimatedTotal":  trip1Total + trip2Total,
+			"HasSaved":        false,
 		}
 		s.render(w, "shopping", data)
 		return

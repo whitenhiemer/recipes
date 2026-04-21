@@ -60,169 +60,170 @@ type ingredientInfo struct {
 	Price      float64
 	Icon       string
 	Department Department
+	BuyUnit    string
 }
 
 var ingredientTable = map[string]ingredientInfo{
 	// Proteins
-	"ground beef":       {5.99, "🥩", DeptMeat},
-	"lean ground beef":  {6.49, "🥩", DeptMeat},
-	"beef":              {5.99, "🥩", DeptMeat},
-	"brisket":           {8.99, "🥩", DeptMeat},
-	"chicken breast":    {7.99, "🍗", DeptMeat},
-	"chicken thighs":    {5.49, "🍗", DeptMeat},
-	"chicken thigh":     {5.49, "🍗", DeptMeat},
-	"chicken":           {5.49, "🍗", DeptMeat},
-	"pork loin":         {12.99, "🥩", DeptMeat},
-	"pork chops":        {7.99, "🥩", DeptMeat},
-	"pork chop":         {7.99, "🥩", DeptMeat},
-	"pork":              {7.99, "🥩", DeptMeat},
-	"bacon":             {6.99, "🥓", DeptMeat},
-	"pancetta":          {4.99, "🥓", DeptMeat},
-	"breakfast sausage": {4.99, "🌭", DeptMeat},
-	"sausage":           {4.99, "🌭", DeptMeat},
-	"tuna":              {1.99, "🐟", DeptMeat},
-	"shrimp":            {9.99, "🦐", DeptMeat},
+	"ground beef":       {5.99, "🥩", DeptMeat, "1 lb"},
+	"lean ground beef":  {6.49, "🥩", DeptMeat, "1 lb"},
+	"beef":              {5.99, "🥩", DeptMeat, "1 lb"},
+	"brisket":           {8.99, "🥩", DeptMeat, "per lb"},
+	"chicken breast":    {7.99, "🍗", DeptMeat, "1.5 lb / 3-4 breasts"},
+	"chicken thighs":    {5.49, "🍗", DeptMeat, "2 lb / 6-8 thighs"},
+	"chicken thigh":     {5.49, "🍗", DeptMeat, "2 lb / 6-8 thighs"},
+	"chicken":           {5.49, "🍗", DeptMeat, "per lb"},
+	"pork loin":         {12.99, "🥩", DeptMeat, "3-4 lb roast"},
+	"pork chops":        {7.99, "🥩", DeptMeat, "4 chops"},
+	"pork chop":         {7.99, "🥩", DeptMeat, "4 chops"},
+	"pork":              {7.99, "🥩", DeptMeat, "per lb"},
+	"bacon":             {6.99, "🥓", DeptMeat, "1 lb / 12-16 slices"},
+	"pancetta":          {4.99, "🥓", DeptMeat, "4 oz pkg"},
+	"breakfast sausage": {4.99, "🌭", DeptMeat, "1 lb roll"},
+	"sausage":           {4.99, "🌭", DeptMeat, "1 lb"},
+	"tuna":              {1.99, "🐟", DeptMeat, "5 oz can"},
+	"shrimp":            {9.99, "🦐", DeptMeat, "1 lb / 21-25 ct"},
 
 	// Dairy & Eggs
-	"eggs":              {4.49, "🥚", DeptDairy},
-	"egg":               {4.49, "🥚", DeptDairy},
-	"egg yolk":          {4.49, "🥚", DeptDairy},
-	"butter":            {4.99, "🧈", DeptDairy},
-	"unsalted butter":   {4.99, "🧈", DeptDairy},
-	"cold butter":       {4.99, "🧈", DeptDairy},
-	"milk":              {3.99, "🥛", DeptDairy},
-	"whole milk":        {3.99, "🥛", DeptDairy},
-	"cream":             {4.49, "🥛", DeptDairy},
-	"sour cream":        {2.49, "🥛", DeptDairy},
-	"yogurt":            {3.99, "🥛", DeptDairy},
-	"cheddar cheese":    {4.49, "🧀", DeptDairy},
-	"cheddar":           {4.49, "🧀", DeptDairy},
-	"american cheese":   {3.99, "🧀", DeptDairy},
-	"swiss cheese":      {4.49, "🧀", DeptDairy},
-	"cheese":            {4.49, "🧀", DeptDairy},
-	"parmesan":          {5.99, "🧀", DeptDairy},
-	"parmesan cheese":   {5.99, "🧀", DeptDairy},
+	"eggs":              {4.49, "🥚", DeptDairy, "1 dozen"},
+	"egg":               {4.49, "🥚", DeptDairy, "1 dozen"},
+	"egg yolk":          {4.49, "🥚", DeptDairy, "1 dozen"},
+	"butter":            {4.99, "🧈", DeptDairy, "1 lb / 4 sticks"},
+	"unsalted butter":   {4.99, "🧈", DeptDairy, "1 lb / 4 sticks"},
+	"cold butter":       {4.99, "🧈", DeptDairy, "1 lb / 4 sticks"},
+	"milk":              {3.99, "🥛", DeptDairy, "1 gallon"},
+	"whole milk":        {3.99, "🥛", DeptDairy, "1 gallon"},
+	"cream":             {4.49, "🥛", DeptDairy, "1 pint"},
+	"sour cream":        {2.49, "🥛", DeptDairy, "16 oz"},
+	"yogurt":            {3.99, "🥛", DeptDairy, "32 oz"},
+	"cheddar cheese":    {4.49, "🧀", DeptDairy, "8 oz block"},
+	"cheddar":           {4.49, "🧀", DeptDairy, "8 oz block"},
+	"american cheese":   {3.99, "🧀", DeptDairy, "12 slices"},
+	"swiss cheese":      {4.49, "🧀", DeptDairy, "8 oz block"},
+	"cheese":            {4.49, "🧀", DeptDairy, "8 oz"},
+	"parmesan":          {5.99, "🧀", DeptDairy, "5 oz wedge"},
+	"parmesan cheese":   {5.99, "🧀", DeptDairy, "5 oz wedge"},
 
 	// Bakery
-	"bread":    {3.49, "🍞", DeptBakery},
-	"biscuits": {2.99, "🍞", DeptBakery},
+	"bread":    {3.49, "🍞", DeptBakery, "1 loaf"},
+	"biscuits": {2.99, "🍞", DeptBakery, "8 ct can"},
 
 	// Grains & Pasta
-	"flour":            {3.99, "🌾", DeptGrains},
-	"all-purpose flour": {3.99, "🌾", DeptGrains},
-	"bread flour":      {4.49, "🌾", DeptGrains},
-	"elbow macaroni":   {1.49, "🍝", DeptGrains},
-	"macaroni":         {1.49, "🍝", DeptGrains},
-	"spaghetti":        {1.49, "🍝", DeptGrains},
-	"pasta":            {1.49, "🍝", DeptGrains},
-	"tortillas":        {3.49, "🫓", DeptGrains},
-	"flour tortillas":  {3.49, "🫓", DeptGrains},
-	"tortilla":         {3.49, "🫓", DeptGrains},
-	"taco shells":      {2.49, "🌮", DeptGrains},
-	"rolled oats":      {3.99, "🌾", DeptGrains},
-	"oats":             {3.99, "🌾", DeptGrains},
-	"masa harina":      {3.99, "🌽", DeptGrains},
-	"rice":             {2.99, "🍚", DeptGrains},
+	"flour":             {3.99, "🌾", DeptGrains, "5 lb bag"},
+	"all-purpose flour": {3.99, "🌾", DeptGrains, "5 lb bag"},
+	"bread flour":       {4.49, "🌾", DeptGrains, "5 lb bag"},
+	"elbow macaroni":    {1.49, "🍝", DeptGrains, "1 lb box"},
+	"macaroni":          {1.49, "🍝", DeptGrains, "1 lb box"},
+	"spaghetti":         {1.49, "🍝", DeptGrains, "1 lb box"},
+	"pasta":             {1.49, "🍝", DeptGrains, "1 lb box"},
+	"tortillas":         {3.49, "🫓", DeptGrains, "10 ct pkg"},
+	"flour tortillas":   {3.49, "🫓", DeptGrains, "10 ct pkg"},
+	"tortilla":          {3.49, "🫓", DeptGrains, "10 ct pkg"},
+	"taco shells":       {2.49, "🌮", DeptGrains, "12 ct box"},
+	"rolled oats":       {3.99, "🌾", DeptGrains, "42 oz canister"},
+	"oats":              {3.99, "🌾", DeptGrains, "42 oz canister"},
+	"masa harina":       {3.99, "🌽", DeptGrains, "4 lb bag"},
+	"rice":              {2.99, "🍚", DeptGrains, "2 lb bag"},
 
 	// Canned goods
-	"crushed tomatoes": {1.99, "🍅", DeptCanned},
-	"diced tomatoes":   {1.49, "🍅", DeptCanned},
-	"tomato sauce":     {1.29, "🍅", DeptCanned},
-	"tomato paste":     {0.99, "🍅", DeptCanned},
-	"marinara sauce":   {3.49, "🍅", DeptCanned},
-	"chicken broth":    {2.49, "🫙", DeptCanned},
-	"beef broth":       {2.49, "🫙", DeptCanned},
-	"broth":            {2.49, "🫙", DeptCanned},
-	"kidney beans":     {1.29, "🫙", DeptCanned},
-	"pumpkin":          {2.99, "🎃", DeptCanned},
+	"crushed tomatoes": {1.99, "🍅", DeptCanned, "28 oz can"},
+	"diced tomatoes":   {1.49, "🍅", DeptCanned, "14.5 oz can"},
+	"tomato sauce":     {1.29, "🍅", DeptCanned, "15 oz can"},
+	"tomato paste":     {0.99, "🍅", DeptCanned, "6 oz can"},
+	"marinara sauce":   {3.49, "🍅", DeptCanned, "24 oz jar"},
+	"chicken broth":    {2.49, "🫙", DeptCanned, "32 oz carton"},
+	"beef broth":       {2.49, "🫙", DeptCanned, "32 oz carton"},
+	"broth":            {2.49, "🫙", DeptCanned, "32 oz carton"},
+	"kidney beans":     {1.29, "🫙", DeptCanned, "15 oz can"},
+	"pumpkin":          {2.99, "🎃", DeptCanned, "15 oz can"},
 
 	// Produce
-	"onion":        {0.99, "🧅", DeptProduce},
-	"onions":       {0.99, "🧅", DeptProduce},
-	"red onion":    {0.99, "🧅", DeptProduce},
-	"garlic":       {0.69, "🧄", DeptProduce},
-	"tomato":       {1.29, "🍅", DeptProduce},
-	"tomatoes":     {1.29, "🍅", DeptProduce},
-	"lettuce":      {1.99, "🥬", DeptProduce},
-	"bell pepper":  {1.29, "🫑", DeptProduce},
-	"broccoli":     {2.49, "🥦", DeptProduce},
-	"snap peas":    {2.99, "🫛", DeptProduce},
-	"celery":       {1.99, "🥬", DeptProduce},
-	"potatoes":     {3.99, "🥔", DeptProduce},
-	"potato":       {0.99, "🥔", DeptProduce},
-	"green onions": {0.99, "🧅", DeptProduce},
-	"cilantro":     {0.99, "🌿", DeptProduce},
-	"parsley":      {0.99, "🌿", DeptProduce},
-	"lemon":        {0.69, "🍋", DeptProduce},
-	"lemon juice":  {2.49, "🍋", DeptProduce},
-	"ginger":       {0.99, "🫚", DeptProduce},
-	"green chili":  {0.49, "🌶️", DeptProduce},
-	"jalapenos":    {0.49, "🌶️", DeptProduce},
-	"lime":         {0.49, "🍋", DeptProduce},
+	"onion":        {0.99, "🧅", DeptProduce, "1 each"},
+	"onions":       {0.99, "🧅", DeptProduce, "3 lb bag"},
+	"red onion":    {0.99, "🧅", DeptProduce, "1 each"},
+	"garlic":       {0.69, "🧄", DeptProduce, "1 head"},
+	"tomato":       {1.29, "🍅", DeptProduce, "1 each"},
+	"tomatoes":     {1.29, "🍅", DeptProduce, "per lb"},
+	"lettuce":      {1.99, "🥬", DeptProduce, "1 head"},
+	"bell pepper":  {1.29, "🫑", DeptProduce, "1 each"},
+	"broccoli":     {2.49, "🥦", DeptProduce, "1 crown"},
+	"snap peas":    {2.99, "🫛", DeptProduce, "8 oz bag"},
+	"celery":       {1.99, "🥬", DeptProduce, "1 bunch"},
+	"potatoes":     {3.99, "🥔", DeptProduce, "5 lb bag"},
+	"potato":       {0.99, "🥔", DeptProduce, "1 each"},
+	"green onions": {0.99, "🧅", DeptProduce, "1 bunch"},
+	"cilantro":     {0.99, "🌿", DeptProduce, "1 bunch"},
+	"parsley":      {0.99, "🌿", DeptProduce, "1 bunch"},
+	"lemon":        {0.69, "🍋", DeptProduce, "1 each"},
+	"lemon juice":  {2.49, "🍋", DeptProduce, "8 oz bottle"},
+	"ginger":       {0.99, "🫚", DeptProduce, "1 knob"},
+	"green chili":  {0.49, "🌶️", DeptProduce, "1 each"},
+	"jalapenos":    {0.49, "🌶️", DeptProduce, "1 each"},
+	"lime":         {0.49, "🍋", DeptProduce, "1 each"},
 
 	// Condiments & Sauces
-	"olive oil":       {6.99, "🫒", DeptCondiments},
-	"vegetable oil":   {3.99, "🫒", DeptCondiments},
-	"sesame oil":      {4.49, "🫒", DeptCondiments},
-	"mayo":            {4.49, "🫙", DeptCondiments},
-	"mayonnaise":      {4.49, "🫙", DeptCondiments},
-	"dijon mustard":   {3.49, "🫙", DeptCondiments},
-	"mustard":         {2.49, "🫙", DeptCondiments},
-	"yellow mustard":  {2.49, "🫙", DeptCondiments},
-	"soy sauce":       {3.49, "🫙", DeptCondiments},
-	"oyster sauce":    {3.99, "🫙", DeptCondiments},
-	"maple syrup":     {6.99, "🍁", DeptCondiments},
-	"honey":           {5.99, "🍯", DeptCondiments},
-	"salsa":           {3.49, "🫙", DeptCondiments},
-	"hot sauce":       {2.99, "🌶️", DeptCondiments},
-	"ketchup":         {3.49, "🫙", DeptCondiments},
-	"vanilla extract": {4.99, "🫙", DeptBaking},
-	"vanilla":         {4.99, "🫙", DeptBaking},
+	"olive oil":       {6.99, "🫒", DeptCondiments, "16 oz bottle"},
+	"vegetable oil":   {3.99, "🫒", DeptCondiments, "48 oz bottle"},
+	"sesame oil":      {4.49, "🫒", DeptCondiments, "5 oz bottle"},
+	"mayo":            {4.49, "🫙", DeptCondiments, "30 oz jar"},
+	"mayonnaise":      {4.49, "🫙", DeptCondiments, "30 oz jar"},
+	"dijon mustard":   {3.49, "🫙", DeptCondiments, "12 oz jar"},
+	"mustard":         {2.49, "🫙", DeptCondiments, "14 oz bottle"},
+	"yellow mustard":  {2.49, "🫙", DeptCondiments, "14 oz bottle"},
+	"soy sauce":       {3.49, "🫙", DeptCondiments, "15 oz bottle"},
+	"oyster sauce":    {3.99, "🫙", DeptCondiments, "9 oz bottle"},
+	"maple syrup":     {6.99, "🍁", DeptCondiments, "12 oz bottle"},
+	"honey":           {5.99, "🍯", DeptCondiments, "12 oz bottle"},
+	"salsa":           {3.49, "🫙", DeptCondiments, "16 oz jar"},
+	"hot sauce":       {2.99, "🌶️", DeptCondiments, "5 oz bottle"},
+	"ketchup":         {3.49, "🫙", DeptCondiments, "20 oz bottle"},
+	"vanilla extract": {4.99, "🫙", DeptBaking, "2 oz bottle"},
+	"vanilla":         {4.99, "🫙", DeptBaking, "2 oz bottle"},
 
 	// Baking
-	"sugar":         {3.49, "🧂", DeptBaking},
-	"brown sugar":   {3.49, "🧂", DeptBaking},
-	"baking powder": {2.99, "🧂", DeptBaking},
-	"baking soda":   {1.49, "🧂", DeptBaking},
-	"cornstarch":    {2.49, "🧂", DeptBaking},
-	"chia seeds":    {5.99, "🌱", DeptBaking},
+	"sugar":         {3.49, "🧂", DeptBaking, "4 lb bag"},
+	"brown sugar":   {3.49, "🧂", DeptBaking, "2 lb bag"},
+	"baking powder": {2.99, "🧂", DeptBaking, "8.1 oz can"},
+	"baking soda":   {1.49, "🧂", DeptBaking, "16 oz box"},
+	"cornstarch":    {2.49, "🧂", DeptBaking, "16 oz box"},
+	"chia seeds":    {5.99, "🌱", DeptBaking, "12 oz bag"},
 
 	// Spices
-	"salt":              {1.99, "🧂", DeptSpices},
-	"kosher salt":       {3.49, "🧂", DeptSpices},
-	"pepper":            {3.99, "🧂", DeptSpices},
-	"black pepper":      {3.99, "🧂", DeptSpices},
-	"cinnamon":          {3.49, "🧂", DeptSpices},
-	"nutmeg":            {4.49, "🧂", DeptSpices},
-	"cloves":            {4.49, "🧂", DeptSpices},
-	"ground cloves":     {4.49, "🧂", DeptSpices},
-	"paprika":           {3.49, "🧂", DeptSpices},
-	"chili powder":      {3.49, "🌶️", DeptSpices},
-	"cumin":             {3.49, "🧂", DeptSpices},
-	"ground cumin":      {3.49, "🧂", DeptSpices},
-	"garlic powder":     {3.49, "🧂", DeptSpices},
-	"onion powder":      {3.49, "🧂", DeptSpices},
-	"cayenne":           {3.49, "🌶️", DeptSpices},
-	"red pepper flakes": {3.49, "🌶️", DeptSpices},
-	"italian seasoning": {3.49, "🌿", DeptSpices},
-	"italian herbs":     {3.49, "🌿", DeptSpices},
-	"oregano":           {3.49, "🌿", DeptSpices},
-	"dried oregano":     {3.49, "🌿", DeptSpices},
-	"thyme":             {2.99, "🌿", DeptSpices},
-	"rosemary":          {2.99, "🌿", DeptSpices},
-	"bay leaves":        {3.49, "🌿", DeptSpices},
-	"cumin seeds":       {3.49, "🧂", DeptSpices},
-	"asafoetida":        {5.99, "🧂", DeptSpices},
-	"coriander powder":  {3.49, "🧂", DeptSpices},
-	"turmeric":          {3.49, "🧂", DeptSpices},
-	"red chili powder":  {3.49, "🌶️", DeptSpices},
+	"salt":              {1.99, "🧂", DeptSpices, "26 oz canister"},
+	"kosher salt":       {3.49, "🧂", DeptSpices, "3 lb box"},
+	"pepper":            {3.99, "🧂", DeptSpices, "2 oz grinder"},
+	"black pepper":      {3.99, "🧂", DeptSpices, "2 oz grinder"},
+	"cinnamon":          {3.49, "🧂", DeptSpices, "2.37 oz jar"},
+	"nutmeg":            {4.49, "🧂", DeptSpices, "1.1 oz jar"},
+	"cloves":            {4.49, "🧂", DeptSpices, "0.9 oz jar"},
+	"ground cloves":     {4.49, "🧂", DeptSpices, "0.9 oz jar"},
+	"paprika":           {3.49, "🧂", DeptSpices, "2.1 oz jar"},
+	"chili powder":      {3.49, "🌶️", DeptSpices, "2.5 oz jar"},
+	"cumin":             {3.49, "🧂", DeptSpices, "1.7 oz jar"},
+	"ground cumin":      {3.49, "🧂", DeptSpices, "1.7 oz jar"},
+	"garlic powder":     {3.49, "🧂", DeptSpices, "3.1 oz jar"},
+	"onion powder":      {3.49, "🧂", DeptSpices, "2.6 oz jar"},
+	"cayenne":           {3.49, "🌶️", DeptSpices, "1.75 oz jar"},
+	"red pepper flakes": {3.49, "🌶️", DeptSpices, "1.5 oz jar"},
+	"italian seasoning": {3.49, "🌿", DeptSpices, "0.87 oz jar"},
+	"italian herbs":     {3.49, "🌿", DeptSpices, "0.87 oz jar"},
+	"oregano":           {3.49, "🌿", DeptSpices, "0.75 oz jar"},
+	"dried oregano":     {3.49, "🌿", DeptSpices, "0.75 oz jar"},
+	"thyme":             {2.99, "🌿", DeptSpices, "0.63 oz jar"},
+	"rosemary":          {2.99, "🌿", DeptSpices, "0.75 oz jar"},
+	"bay leaves":        {3.49, "🌿", DeptSpices, "0.12 oz jar"},
+	"cumin seeds":       {3.49, "🧂", DeptSpices, "1.7 oz jar"},
+	"asafoetida":        {5.99, "🧂", DeptSpices, "3.5 oz jar"},
+	"coriander powder":  {3.49, "🧂", DeptSpices, "1.5 oz jar"},
+	"turmeric":          {3.49, "🧂", DeptSpices, "1.8 oz jar"},
+	"red chili powder":  {3.49, "🌶️", DeptSpices, "2.5 oz jar"},
 
 	// Other
-	"corn husks": {3.99, "🌽", DeptOther},
-	"lard":       {3.99, "🫙", DeptOther},
-	"granola":    {4.99, "🥣", DeptOther},
-	"water":      {0.00, "💧", DeptOther},
-	"cold water": {0.00, "💧", DeptOther},
+	"corn husks": {3.99, "🌽", DeptOther, "1 pkg"},
+	"lard":       {3.99, "🫙", DeptOther, "1 lb"},
+	"granola":    {4.99, "🥣", DeptOther, "12 oz bag"},
+	"water":      {0.00, "💧", DeptOther, ""},
+	"cold water": {0.00, "💧", DeptOther, ""},
 }
 
 func lookupIngredient(name string) (ingredientInfo, bool) {
@@ -260,6 +261,13 @@ func IngredientDepartment(ingredientName string) Department {
 		return info.Department
 	}
 	return DeptOther
+}
+
+func IngredientBuyUnit(ingredientName string) string {
+	if info, ok := lookupIngredient(ingredientName); ok {
+		return info.BuyUnit
+	}
+	return ""
 }
 
 var defaultPantryStaples = map[string]bool{
@@ -304,17 +312,24 @@ func IsPantryStaple(ingredientName string) bool {
 }
 
 type PricedShoppingItem struct {
-	Name       string
-	Amounts    []string
-	Price      float64
-	Icon       string
-	Department string
-	IsPantry   bool
+	Name        string
+	Amounts     []string
+	Price       float64
+	Icon        string
+	Department  string
+	BuyUnit     string
+	IsPantry    bool
+	IsPerishable bool
+	Trip        int
 }
 
 type ShoppingDepartment struct {
 	Name  string
 	Items []PricedShoppingItem
+}
+
+func IsPerishableDepartment(dept Department) bool {
+	return dept == DeptProduce || dept == DeptMeat || dept == DeptDairy
 }
 
 func PriceShoppingList(list *ShoppingList) ([]PricedShoppingItem, float64) {
@@ -324,13 +339,16 @@ func PriceShoppingList(list *ShoppingList) ([]PricedShoppingItem, float64) {
 	for _, item := range list.Items {
 		price := EstimatePrice(item.Name)
 		pantry := IsPantryStaple(item.Name)
+		dept := IngredientDepartment(item.Name)
 		items = append(items, PricedShoppingItem{
-			Name:       item.Name,
-			Amounts:    item.Amounts,
-			Price:      price,
-			Icon:       IngredientIcon(item.Name),
-			Department: IngredientDepartment(item.Name).String(),
-			IsPantry:   pantry,
+			Name:         item.Name,
+			Amounts:      item.Amounts,
+			Price:        price,
+			Icon:         IngredientIcon(item.Name),
+			Department:   dept.String(),
+			BuyUnit:      IngredientBuyUnit(item.Name),
+			IsPantry:     pantry,
+			IsPerishable: IsPerishableDepartment(dept),
 		})
 		if !pantry {
 			total += price

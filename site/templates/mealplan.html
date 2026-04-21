@@ -7,65 +7,62 @@
     <div class="mealplan-container">
         <div class="mealplan-grid">
             <div class="mealplan-column">
-                <h3>Breakfast</h3>
+                <h3>Breakfast <small class="slot-label">Early Week</small></h3>
                 <div class="mealplan-slots" id="breakfast-slots">
                     <div class="meal-slot" data-meal="breakfast" data-slot="0">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('breakfast', 0)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('breakfast', 0, this)"></select>
                     </div>
                     <div class="meal-slot" data-meal="breakfast" data-slot="1">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('breakfast', 1)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('breakfast', 1, this)"></select>
                     </div>
+                </div>
+                <h3><small class="slot-label">Late Week</small></h3>
+                <div class="mealplan-slots">
                     <div class="meal-slot" data-meal="breakfast" data-slot="2">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('breakfast', 2)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('breakfast', 2, this)"></select>
                     </div>
                     <div class="meal-slot" data-meal="breakfast" data-slot="3">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('breakfast', 3)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('breakfast', 3, this)"></select>
                     </div>
                 </div>
             </div>
             <div class="mealplan-column">
-                <h3>Lunch</h3>
+                <h3>Lunch <small class="slot-label">Early Week</small></h3>
                 <div class="mealplan-slots" id="lunch-slots">
                     <div class="meal-slot" data-meal="lunch" data-slot="0">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('lunch', 0)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('lunch', 0, this)"></select>
                     </div>
                     <div class="meal-slot" data-meal="lunch" data-slot="1">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('lunch', 1)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('lunch', 1, this)"></select>
                     </div>
+                </div>
+                <h3><small class="slot-label">Late Week</small></h3>
+                <div class="mealplan-slots">
                     <div class="meal-slot" data-meal="lunch" data-slot="2">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('lunch', 2)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('lunch', 2, this)"></select>
                     </div>
                     <div class="meal-slot" data-meal="lunch" data-slot="3">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('lunch', 3)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('lunch', 3, this)"></select>
                     </div>
                 </div>
             </div>
             <div class="mealplan-column">
-                <h3>Dinner</h3>
+                <h3>Dinner <small class="slot-label">Early Week</small></h3>
                 <div class="mealplan-slots" id="dinner-slots">
                     <div class="meal-slot" data-meal="dinner" data-slot="0">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('dinner', 0)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('dinner', 0, this)"></select>
                     </div>
                     <div class="meal-slot" data-meal="dinner" data-slot="1">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('dinner', 1)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('dinner', 1, this)"></select>
                     </div>
+                </div>
+                <h3><small class="slot-label">Late Week</small></h3>
+                <div class="mealplan-slots">
                     <div class="meal-slot" data-meal="dinner" data-slot="2">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('dinner', 2)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('dinner', 2, this)"></select>
                     </div>
                     <div class="meal-slot" data-meal="dinner" data-slot="3">
-                        <span class="slot-recipe"></span>
-                        <button class="slot-clear" onclick="clearSlot('dinner', 3)" style="display:none">x</button>
+                        <select class="slot-select" onchange="selectSlot('dinner', 3, this)"></select>
                     </div>
                 </div>
             </div>

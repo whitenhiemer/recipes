@@ -314,6 +314,28 @@
     font-size: 1rem;
 }
 
+.meal-slot .slot-select {
+    width: 100%;
+    font-size: 0.95rem;
+    min-height: 44px;
+    border: none;
+    background: transparent;
+    margin: 0;
+    padding: 0 0.5rem;
+}
+
+.meal-slot.filled .slot-select {
+    font-weight: 600;
+}
+
+.slot-label {
+    font-size: 0.75rem;
+    font-weight: normal;
+    opacity: 0.5;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 .slot-clear {
     position: absolute;
     top: 50%;
@@ -429,6 +451,13 @@
     text-align: center;
 }
 
+.buy-unit {
+    font-size: 0.8rem;
+    opacity: 0.5;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
 .item-price {
     margin-left: auto;
     font-size: 0.95rem;
@@ -454,6 +483,53 @@
     opacity: 0.6;
     margin-top: 0.25rem;
     margin-bottom: 0;
+}
+
+/* Shopping Trip Tabs */
+.trip-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.trip-tab {
+    padding: 0.6rem 1.25rem;
+    border: 2px solid var(--pico-muted-border-color);
+    border-radius: 0.5rem;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.95rem;
+    min-height: 48px;
+    flex: 1;
+    text-align: center;
+}
+
+.trip-tab.active {
+    border-color: var(--pico-primary-background);
+    background: var(--pico-primary-background);
+    color: var(--pico-primary-inverse);
+    font-weight: bold;
+}
+
+.trip-desc {
+    font-size: 0.9rem;
+    opacity: 0.6;
+    margin-bottom: 1rem;
+}
+
+/* Shopping Reminder */
+.shopping-reminder {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--pico-card-background-color);
+    border-left: 4px solid var(--pico-primary-background);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+.shopping-reminder p {
+    margin: 0;
 }
 
 /* Shopping Departments */
@@ -693,6 +769,87 @@ nav ul li a {
     justify-content: center;
 }
 
+/* Pantry Suggestions */
+.suggestions-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 0.5rem;
+    background: var(--pico-card-background-color);
+}
+
+.suggestions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.suggestions-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.suggestions-header button {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 36px;
+}
+
+.suggestions-hint {
+    font-size: 0.9rem;
+    opacity: 0.6;
+    margin-bottom: 0.75rem;
+}
+
+.suggestions-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.suggestions-group-header:first-child {
+    margin-top: 0;
+}
+
+.suggestion-add-all {
+    background: none;
+    border: none;
+    color: var(--pico-primary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    min-height: 36px;
+}
+
+.suggestions-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.suggestion-chip {
+    padding: 0.35rem 0.75rem;
+    border-radius: 1rem;
+    border: 1px solid var(--pico-muted-border-color);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    min-height: 36px;
+    white-space: nowrap;
+}
+
+.suggestion-chip:hover {
+    background: var(--pico-primary-background);
+    color: var(--pico-primary-inverse);
+    border-color: var(--pico-primary-background);
+}
+
 .pantry-empty {
     opacity: 0.6;
     text-align: center;
@@ -782,7 +939,7 @@ nav ul li a {
 @media print {
     nav, footer, header, .shopping-actions, .mealplan-actions, .mealplan-sidebar,
     .search-bar, .category-tabs, .wake-lock-toggle, .new-recipe-tabs,
-    .home-toolbar, .new-recipe-btn, .pantry-toggle, h2 {
+    .home-toolbar, .new-recipe-btn, .pantry-toggle, .trip-tabs, .trip-desc, h2 {
         display: none !important;
     }
 
@@ -845,49 +1002,58 @@ nav ul li a {
         letter-spacing: 0.1em;
     }
 
-    /* 3-column item grid */
-    #shopping-list {
+    /* Single-list: 3-column item grid */
+    #shopping-list:not(:has(.trip-section)) {
         column-count: 3;
         column-gap: 14px;
         margin: 0 !important;
         padding: 0 !important;
     }
 
+    /* Trip-based: side-by-side 2-column grid */
+    #shopping-list:has(.trip-section) {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 14px;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
     .shopping-dept {
         break-inside: avoid;
-        margin: 0 0 6px 0 !important;
+        margin: 0 0 4px 0 !important;
         padding: 0 !important;
     }
 
     .dept-header {
-        font-size: 8px !important;
+        font-size: 7px !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.08em !important;
         border-bottom: 1px solid #aaa !important;
-        margin: 0 0 2px 0 !important;
+        margin: 0 0 1px 0 !important;
         padding: 0 0 1px 0 !important;
     }
 
     .shopping-item {
         margin: 0 !important;
-        padding: 1px 0 !important;
+        padding: 0 !important;
         border: none !important;
-        line-height: 1.3;
+        line-height: 1.2;
     }
 
     .shopping-item label {
-        font-size: 9px !important;
+        font-size: 8px !important;
         min-height: auto !important;
-        gap: 3px !important;
+        gap: 2px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: baseline !important;
     }
 
     .shopping-item input[type="checkbox"] {
-        width: 8px !important;
-        height: 8px !important;
+        width: 7px !important;
+        height: 7px !important;
         margin: 0 !important;
         flex-shrink: 0;
         -webkit-appearance: none;
@@ -900,13 +1066,17 @@ nav ul li a {
         display: none !important;
     }
 
+    .buy-unit {
+        display: none !important;
+    }
+
     .shopping-item strong {
-        font-size: 9px !important;
+        font-size: 8px !important;
         font-weight: 500 !important;
     }
 
     .item-price {
-        font-size: 8px !important;
+        font-size: 7px !important;
         margin-left: auto !important;
         opacity: 0.5;
     }
@@ -916,26 +1086,68 @@ nav ul li a {
     }
 
     .shopping-total {
-        margin: 8px 0 0 0 !important;
-        padding: 4px 0 0 0 !important;
-        font-size: 11px !important;
-        column-span: all;
-        border-top: 2px solid #333 !important;
+        margin: 4px 0 0 0 !important;
+        padding: 2px 0 0 0 !important;
+        font-size: 8px !important;
+        border-top: 1px solid #666 !important;
         text-align: right;
+    }
+
+    /* Combined total spans full width */
+    section > .shopping-total {
+        font-size: 9px !important;
+        border-top: 2px solid #333 !important;
+        column-span: all;
     }
 
     .shopping-total strong {
         font-weight: 700 !important;
-        font-size: 11px !important;
+        font-size: inherit !important;
     }
 
     .shopping-total-note {
-        font-size: 7px !important;
+        font-size: 6px !important;
         opacity: 0.5;
         text-align: right;
     }
 
     .pantry-badge {
         display: none !important;
+    }
+
+    .trip-section {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .trip-section::before {
+        content: attr(data-trip);
+        display: block;
+        font-size: 8px !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-bottom: 1.5px solid #333 !important;
+        padding-bottom: 1px !important;
+        margin-bottom: 3px !important;
+    }
+
+    .trip-section[data-trip="trip1"]::before {
+        content: "Trip 1 — Early Week";
+    }
+
+    .trip-section[data-trip="trip2"]::before {
+        content: "Trip 2 — Late Week";
+    }
+
+    .shopping-reminder {
+        margin-top: 4px !important;
+        padding: 2px 0 0 0 !important;
+        font-size: 8px !important;
+        font-style: italic;
+        text-align: center;
+        border: none !important;
+        background: none !important;
     }
 }

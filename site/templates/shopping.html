@@ -9,7 +9,93 @@
 </div>
 <section>
     <h2>Shopping List</h2>
-    {{if .Items}}
+    {{if .HasTrips}}
+    <div class="shopping-actions">
+        <button onclick="saveShoppingList()">Save List</button>
+        <button class="secondary" onclick="window.print()">Print</button>
+        <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
+    </div>
+    <div class="pantry-toggle">
+        <label>
+            <input type="checkbox" id="hide-pantry" onchange="applyFilters()">
+            Hide pantry staples
+        </label>
+        <label>
+            <input type="checkbox" id="hide-on-hand" onchange="applyFilters()">
+            Hide items on hand
+        </label>
+    </div>
+    <div class="trip-tabs">
+        <button class="trip-tab active" onclick="switchTrip('trip1', this)">Trip 1 — Early Week</button>
+        <button class="trip-tab" onclick="switchTrip('trip2', this)">Trip 2 — Late Week</button>
+    </div>
+    <div id="shopping-list">
+        <div class="trip-section" data-trip="trip1">
+            <p class="trip-desc">All shelf-stable items for the week, plus fresh ingredients for your first meals.</p>
+            {{range .Trip1Departments}}
+            <div class="shopping-dept" data-dept="{{.Name}}">
+                <h3 class="dept-header">{{.Name}}</h3>
+                {{range .Items}}
+                <div class="shopping-item{{if .IsPantry}} is-pantry{{end}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}" data-icon="{{.Icon}}" data-dept="{{.Department}}" data-pantry="{{.IsPantry}}" data-buyunit="{{.BuyUnit}}" data-trip="1">
+                    <label>
+                        <input type="checkbox" onchange="toggleShoppingItem(this)">
+                        <span class="item-icon">{{.Icon}}</span>
+                        <strong>{{.Name}}</strong>
+                        {{if .BuyUnit}}<span class="buy-unit">{{.BuyUnit}}</span>{{end}}
+                        {{if .IsPantry}}<span class="pantry-badge">(pantry)</span>{{end}}
+                        <span class="item-price">${{printf "%.2f" .Price}}</span>
+                    </label>
+                    <ul>
+                        {{range .Amounts}}
+                        <li>{{.}}</li>
+                        {{end}}
+                    </ul>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+            <div class="shopping-total">
+                <strong>Trip 1 Estimate: ${{printf "%.2f" .Trip1Total}}</strong>
+                <p class="shopping-total-note">Excludes pantry staples and items on hand. Prices are estimates.</p>
+            </div>
+        </div>
+        <div class="trip-section" data-trip="trip2" style="display:none">
+            <p class="trip-desc">Fresh and perishable items for your later meals.</p>
+            {{range .Trip2Departments}}
+            <div class="shopping-dept" data-dept="{{.Name}}">
+                <h3 class="dept-header">{{.Name}}</h3>
+                {{range .Items}}
+                <div class="shopping-item{{if .IsPantry}} is-pantry{{end}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}" data-icon="{{.Icon}}" data-dept="{{.Department}}" data-pantry="{{.IsPantry}}" data-buyunit="{{.BuyUnit}}" data-trip="2">
+                    <label>
+                        <input type="checkbox" onchange="toggleShoppingItem(this)">
+                        <span class="item-icon">{{.Icon}}</span>
+                        <strong>{{.Name}}</strong>
+                        {{if .BuyUnit}}<span class="buy-unit">{{.BuyUnit}}</span>{{end}}
+                        {{if .IsPantry}}<span class="pantry-badge">(pantry)</span>{{end}}
+                        <span class="item-price">${{printf "%.2f" .Price}}</span>
+                    </label>
+                    <ul>
+                        {{range .Amounts}}
+                        <li>{{.}}</li>
+                        {{end}}
+                    </ul>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+            <div class="shopping-total">
+                <strong>Trip 2 Estimate: ${{printf "%.2f" .Trip2Total}}</strong>
+                <p class="shopping-total-note">Excludes pantry staples and items on hand. Prices are estimates.</p>
+            </div>
+        </div>
+    </div>
+    <div class="shopping-total">
+        <strong>Combined Total: ${{printf "%.2f" .EstimatedTotal}}</strong>
+    </div>
+    <div class="shopping-reminder">
+        <p>Libby — don't forget to fill up the gas tank!</p>
+    </div>
+    {{else if .Items}}
     <div class="shopping-actions">
         <button onclick="saveShoppingList()">Save List</button>
         <button class="secondary" onclick="window.print()">Print</button>
@@ -30,11 +116,12 @@
         <div class="shopping-dept" data-dept="{{.Name}}">
             <h3 class="dept-header">{{.Name}}</h3>
             {{range .Items}}
-            <div class="shopping-item{{if .IsPantry}} is-pantry{{end}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}" data-icon="{{.Icon}}" data-dept="{{.Department}}" data-pantry="{{.IsPantry}}">
+            <div class="shopping-item{{if .IsPantry}} is-pantry{{end}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}" data-icon="{{.Icon}}" data-dept="{{.Department}}" data-pantry="{{.IsPantry}}" data-buyunit="{{.BuyUnit}}">
                 <label>
                     <input type="checkbox" onchange="toggleShoppingItem(this)">
                     <span class="item-icon">{{.Icon}}</span>
                     <strong>{{.Name}}</strong>
+                    {{if .BuyUnit}}<span class="buy-unit">{{.BuyUnit}}</span>{{end}}
                     {{if .IsPantry}}<span class="pantry-badge">(pantry)</span>{{end}}
                     <span class="item-price">${{printf "%.2f" .Price}}</span>
                 </label>
@@ -51,6 +138,9 @@
     <div class="shopping-total">
         <strong>Estimated Total: ${{printf "%.2f" .EstimatedTotal}}</strong>
         <p class="shopping-total-note">Excludes pantry staples and items on hand. Prices are estimates.</p>
+    </div>
+    <div class="shopping-reminder">
+        <p>Libby — don't forget to fill up the gas tank!</p>
     </div>
     {{else if .HasSaved}}
     <div class="shopping-actions">
@@ -80,6 +170,14 @@ const SHOPPING_KEY = 'recipe-shopping-list';
 const PANTRY_HIDE_KEY = 'recipe-hide-pantry';
 const ON_HAND_HIDE_KEY = 'recipe-hide-on-hand';
 const PANTRY_KEY = 'recipe-pantry-inventory';
+
+function switchTrip(trip, btn) {
+    document.querySelectorAll('.trip-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.trip-section').forEach(s => {
+        s.style.display = s.getAttribute('data-trip') === trip ? '' : 'none';
+    });
+}
 
 function getPantryNames() {
     const data = localStorage.getItem(PANTRY_KEY);
@@ -125,7 +223,6 @@ function applyFilters() {
     document.querySelectorAll('.shopping-item').forEach(el => {
         const isPantry = el.getAttribute('data-pantry') === 'true';
         const isOnHand = el.getAttribute('data-on-hand') === 'true';
-        const hide = (hidePantry && isPantry) || (hideOnHand && isOnHand);
         el.classList.toggle('hide-pantry', hidePantry && isPantry);
         el.classList.toggle('hide-on-hand', hideOnHand && isOnHand);
     });
@@ -149,9 +246,11 @@ function saveShoppingList() {
         const dept = el.getAttribute('data-dept') || 'Other';
         const pantry = el.getAttribute('data-pantry') === 'true';
         const onHand = el.getAttribute('data-on-hand') === 'true';
+        const buyunit = el.getAttribute('data-buyunit') || '';
+        const trip = el.getAttribute('data-trip') || '';
         const amounts = [];
         el.querySelectorAll('li').forEach(li => amounts.push(li.textContent));
-        items.push({ name, amounts, checked, icon, price, dept, pantry, onHand });
+        items.push({ name, amounts, checked, icon, price, dept, pantry, onHand, buyunit, trip });
     });
     localStorage.setItem(SHOPPING_KEY, JSON.stringify(items));
     alert('Shopping list saved!');
@@ -200,6 +299,7 @@ function loadSavedShoppingList() {
             if (item.price) div.setAttribute('data-price', item.price);
             if (item.dept) div.setAttribute('data-dept', item.dept);
             div.setAttribute('data-pantry', item.pantry ? 'true' : 'false');
+            if (item.buyunit) div.setAttribute('data-buyunit', item.buyunit);
 
             const label = document.createElement('label');
             const checkbox = document.createElement('input');
@@ -222,6 +322,13 @@ function loadSavedShoppingList() {
                 strong.style.opacity = '0.5';
             }
             label.appendChild(strong);
+
+            if (item.buyunit) {
+                const unitSpan = document.createElement('span');
+                unitSpan.className = 'buy-unit';
+                unitSpan.textContent = item.buyunit;
+                label.appendChild(unitSpan);
+            }
 
             if (item.pantry) {
                 const badge = document.createElement('span');
@@ -308,21 +415,33 @@ function copyShoppingList() {
     const hidePantry = document.getElementById('hide-pantry') && document.getElementById('hide-pantry').checked;
     const hideOnHand = document.getElementById('hide-on-hand') && document.getElementById('hide-on-hand').checked;
     const lines = [];
-    document.querySelectorAll('.shopping-dept').forEach(section => {
-        const selector = '.shopping-item' +
-            (hidePantry ? ':not(.is-pantry)' : '') +
-            (hideOnHand ? ':not(.is-on-hand)' : '');
-        const deptItems = section.querySelectorAll(selector);
-        if (!deptItems.length) return;
-        const dept = section.querySelector('.dept-header').textContent;
-        lines.push('\n' + dept.toUpperCase());
-        deptItems.forEach(el => {
-            const name = el.querySelector('strong').textContent;
-            lines.push('  ' + name);
+
+    document.querySelectorAll('.trip-section, #shopping-list').forEach(tripEl => {
+        if (tripEl.style.display === 'none') return;
+        const tripLabel = tripEl.getAttribute('data-trip');
+        if (tripLabel) {
+            lines.push(tripLabel === 'trip1' ? '=== TRIP 1 — EARLY WEEK ===' : '=== TRIP 2 — LATE WEEK ===');
+        }
+
+        tripEl.querySelectorAll('.shopping-dept').forEach(section => {
+            const selector = '.shopping-item' +
+                (hidePantry ? ':not(.is-pantry)' : '') +
+                (hideOnHand ? ':not(.is-on-hand)' : '');
+            const deptItems = section.querySelectorAll(selector);
+            if (!deptItems.length) return;
+            const dept = section.querySelector('.dept-header').textContent;
+            lines.push('\n' + dept.toUpperCase());
+            deptItems.forEach(el => {
+                const name = el.querySelector('strong').textContent;
+                const unit = el.getAttribute('data-buyunit');
+                lines.push('  ' + name + (unit ? ' (' + unit + ')' : ''));
+            });
         });
     });
+
     const totalEl = document.querySelector('.shopping-total strong');
     if (totalEl) lines.push('\n' + totalEl.textContent);
+    lines.push('\nReminder: Libby, fill up the gas tank!');
     navigator.clipboard.writeText(lines.join('\n').trim()).then(() => alert('Copied to clipboard!'));
 }
 

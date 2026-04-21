@@ -32,6 +32,31 @@ function addToMealPlan(slug, title) {
     renderMealPlan();
 }
 
+function selectSlot(meal, slotIndex, selectEl) {
+    const plan = getMealPlan();
+    const slug = selectEl.value;
+
+    if (!slug) {
+        if (plan[meal][slotIndex]) {
+            plan[meal].splice(slotIndex, 1);
+        }
+    } else {
+        const data = getRecipeData();
+        const all = data ? data.all : [];
+        const recipe = all.find(function(r) { return r.slug === slug; });
+        const title = recipe ? recipe.title : slug;
+
+        while (plan[meal].length < slotIndex) {
+            plan[meal].push(null);
+        }
+        plan[meal][slotIndex] = { slug: slug, title: title };
+    }
+
+    plan[meal] = plan[meal].filter(function(e) { return e !== null; });
+    saveMealPlan(plan);
+    renderMealPlan();
+}
+
 function clearSlot(meal, index) {
     const plan = getMealPlan();
     plan[meal].splice(index, 1);
@@ -44,56 +69,103 @@ function clearMealPlan() {
     renderMealPlan();
 }
 
-function renderMealPlan() {
-    const plan = getMealPlan();
+function buildSlotOptions(select, meal, selectedSlug) {
+    while (select.firstChild) select.removeChild(select.firstChild);
 
-    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
-        const slots = document.querySelectorAll('.meal-slot[data-meal="' + meal + '"]');
-        slots.forEach((slot, i) => {
-            const recipeSpan = slot.querySelector('.slot-recipe');
-            const clearBtn = slot.querySelector('.slot-clear');
-            const entry = plan[meal][i];
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Choose a recipe...';
+    select.appendChild(placeholder);
 
-            if (entry) {
-                recipeSpan.textContent = entry.title;
-                recipeSpan.closest('.meal-slot').classList.add('filled');
-                clearBtn.style.display = 'inline';
-            } else {
-                recipeSpan.textContent = '';
-                recipeSpan.closest('.meal-slot').classList.remove('filled');
-                clearBtn.style.display = 'none';
-            }
+    var data = getRecipeData();
+    if (!data) return;
+
+    var catRecipes = data[meal] || [];
+    var allRecipes = data.all || [];
+    var catSlugs = new Set(catRecipes.map(function(r) { return r.slug; }));
+    var otherRecipes = allRecipes.filter(function(r) { return !catSlugs.has(r.slug); });
+
+    if (catRecipes.length) {
+        var catGroup = document.createElement('optgroup');
+        catGroup.label = meal.charAt(0).toUpperCase() + meal.slice(1);
+        catRecipes.forEach(function(r) {
+            var opt = document.createElement('option');
+            opt.value = r.slug;
+            opt.textContent = r.title;
+            if (r.slug === selectedSlug) opt.selected = true;
+            catGroup.appendChild(opt);
         });
-    });
+        select.appendChild(catGroup);
+    }
 
-    // Update slot count display
-    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
-        const count = plan[meal].length;
-        const counter = document.getElementById(meal + '-count');
-        if (counter) counter.textContent = count + ' / ' + SLOTS_PER_MEAL;
+    if (otherRecipes.length) {
+        var otherGroup = document.createElement('optgroup');
+        otherGroup.label = 'Other Recipes';
+        otherRecipes.forEach(function(r) {
+            var opt = document.createElement('option');
+            opt.value = r.slug;
+            opt.textContent = r.title + ' (' + r.category + ')';
+            if (r.slug === selectedSlug) opt.selected = true;
+            otherGroup.appendChild(opt);
+        });
+        select.appendChild(otherGroup);
+    }
+}
+
+function renderMealPlan() {
+    var plan = getMealPlan();
+
+    ['breakfast', 'lunch', 'dinner'].forEach(function(meal) {
+        var slots = document.querySelectorAll('.meal-slot[data-meal="' + meal + '"]');
+        slots.forEach(function(slot, i) {
+            var select = slot.querySelector('.slot-select');
+            if (!select) return;
+            var entry = plan[meal][i];
+            var selectedSlug = entry ? entry.slug : '';
+
+            buildSlotOptions(select, meal, selectedSlug);
+            slot.classList.toggle('filled', !!entry);
+        });
     });
 }
 
 function generateShoppingList() {
     const plan = getMealPlan();
-    const slugs = [];
-    const seen = new Set();
+    const trip1 = new Set();
+    const trip2 = new Set();
+    const trip1Slugs = [];
+    const trip2Slugs = [];
 
     ['breakfast', 'lunch', 'dinner'].forEach(meal => {
-        plan[meal].forEach(entry => {
-            if (!seen.has(entry.slug)) {
-                slugs.push(entry.slug);
-                seen.add(entry.slug);
+        plan[meal].forEach((entry, i) => {
+            if (i < 2) {
+                if (!trip1.has(entry.slug)) {
+                    trip1Slugs.push(entry.slug);
+                    trip1.add(entry.slug);
+                }
+            } else {
+                if (!trip2.has(entry.slug)) {
+                    trip2Slugs.push(entry.slug);
+                    trip2.add(entry.slug);
+                }
             }
         });
     });
 
-    if (slugs.length === 0) {
+    if (trip1Slugs.length === 0 && trip2Slugs.length === 0) {
         alert('Add recipes to your meal plan first.');
         return;
     }
 
-    window.location.href = '/shopping-list?slugs=' + slugs.join(',');
+    if (trip2Slugs.length === 0) {
+        window.location.href = '/shopping-list?slugs=' + trip1Slugs.join(',');
+        return;
+    }
+
+    const params = [];
+    if (trip1Slugs.length) params.push('trip1=' + trip1Slugs.join(','));
+    if (trip2Slugs.length) params.push('trip2=' + trip2Slugs.join(','));
+    window.location.href = '/shopping-list?' + params.join('&');
 }
 
 function getRecipeData() {

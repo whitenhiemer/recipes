@@ -23,8 +23,17 @@
 
     <div id="pantry-list" class="pantry-list"></div>
 
+    <div id="suggestions-section" class="suggestions-section" style="display:none">
+        <div class="suggestions-header">
+            <h3>Common Items</h3>
+            <button class="secondary outline" onclick="dismissSuggestions()">Dismiss</button>
+        </div>
+        <p class="suggestions-hint">Tap to add what you already have at home.</p>
+        <div id="suggestions-list"></div>
+    </div>
+
     <div id="pantry-empty" class="pantry-empty" style="display:none">
-        <p>No items yet. Add what you have on hand above.</p>
+        <p>No items yet. Add what you have on hand above, or pick from the common items below.</p>
     </div>
 
     <div class="pantry-actions">
@@ -94,6 +103,136 @@ function filterPantry(location, btn) {
 
 const locationIcons = { pantry: '\u{1F3E0}', fridge: '\u{1F9CA}', freezer: '\u{1F976}' };
 
+const SUGGESTIONS_DISMISSED_KEY = 'recipe-pantry-suggestions-dismissed';
+
+const commonItems = [
+    { name: 'butter', location: 'fridge', icon: '\u{1F9C8}' },
+    { name: 'eggs', location: 'fridge', icon: '\u{1F95A}' },
+    { name: 'milk', location: 'fridge', icon: '\u{1F95B}' },
+    { name: 'cheese', location: 'fridge', icon: '\u{1F9C0}' },
+    { name: 'cream cheese', location: 'fridge', icon: '\u{1F9C0}' },
+    { name: 'sour cream', location: 'fridge', icon: '\u{1F95B}' },
+    { name: 'heavy cream', location: 'fridge', icon: '\u{1F95B}' },
+    { name: 'yogurt', location: 'fridge', icon: '\u{1F95B}' },
+    { name: 'mayonnaise', location: 'fridge', icon: '\u{1FAD9}' },
+    { name: 'mustard', location: 'fridge', icon: '\u{1FAD5}' },
+    { name: 'ketchup', location: 'fridge', icon: '\u{1F345}' },
+    { name: 'hot sauce', location: 'fridge', icon: '\u{1F336}\u{FE0F}' },
+    { name: 'soy sauce', location: 'fridge', icon: '\u{1F961}' },
+    { name: 'lemons', location: 'fridge', icon: '\u{1F34B}' },
+    { name: 'limes', location: 'fridge', icon: '\u{1F34B}' },
+    { name: 'garlic', location: 'pantry', icon: '\u{1F9C4}' },
+    { name: 'onions', location: 'pantry', icon: '\u{1F9C5}' },
+    { name: 'potatoes', location: 'pantry', icon: '\u{1F954}' },
+    { name: 'olive oil', location: 'pantry', icon: '\u{1FAD2}' },
+    { name: 'vegetable oil', location: 'pantry', icon: '\u{1FAD2}' },
+    { name: 'all-purpose flour', location: 'pantry', icon: '\u{1F33E}' },
+    { name: 'sugar', location: 'pantry', icon: '\u{1F36C}' },
+    { name: 'brown sugar', location: 'pantry', icon: '\u{1F36C}' },
+    { name: 'salt', location: 'pantry', icon: '\u{1F9C2}' },
+    { name: 'black pepper', location: 'pantry', icon: '\u{1F9C2}' },
+    { name: 'baking powder', location: 'pantry', icon: '\u{1F9C2}' },
+    { name: 'baking soda', location: 'pantry', icon: '\u{1F9C2}' },
+    { name: 'vanilla extract', location: 'pantry', icon: '\u{1F33F}' },
+    { name: 'rice', location: 'pantry', icon: '\u{1F35A}' },
+    { name: 'pasta', location: 'pantry', icon: '\u{1F35D}' },
+    { name: 'bread', location: 'pantry', icon: '\u{1F35E}' },
+    { name: 'chicken broth', location: 'pantry', icon: '\u{1F372}' },
+    { name: 'canned tomatoes', location: 'pantry', icon: '\u{1F345}' },
+    { name: 'tomato paste', location: 'pantry', icon: '\u{1F345}' },
+    { name: 'honey', location: 'pantry', icon: '\u{1F36F}' },
+    { name: 'maple syrup', location: 'pantry', icon: '\u{1F341}' },
+    { name: 'worcestershire sauce', location: 'pantry', icon: '\u{1FAD9}' },
+    { name: 'red wine vinegar', location: 'pantry', icon: '\u{1F377}' },
+    { name: 'apple cider vinegar', location: 'pantry', icon: '\u{1F34E}' },
+    { name: 'paprika', location: 'pantry', icon: '\u{1F336}\u{FE0F}' },
+    { name: 'cumin', location: 'pantry', icon: '\u{1F9C2}' },
+    { name: 'chili powder', location: 'pantry', icon: '\u{1F336}\u{FE0F}' },
+    { name: 'oregano', location: 'pantry', icon: '\u{1F33F}' },
+    { name: 'cinnamon', location: 'pantry', icon: '\u{1F33F}' },
+    { name: 'frozen vegetables', location: 'freezer', icon: '\u{1F966}' },
+    { name: 'frozen chicken', location: 'freezer', icon: '\u{1F357}' },
+    { name: 'frozen ground beef', location: 'freezer', icon: '\u{1F969}' },
+    { name: 'frozen shrimp', location: 'freezer', icon: '\u{1F990}' },
+    { name: 'ice cream', location: 'freezer', icon: '\u{1F368}' },
+];
+
+function getSuggestions() {
+    const pantryNames = new Set(getPantry().map(i => i.name));
+    return commonItems.filter(i => !pantryNames.has(i.name));
+}
+
+function addSuggestion(name) {
+    const item = commonItems.find(i => i.name === name);
+    if (!item) return;
+    const items = getPantry();
+    if (!items.find(i => i.name === name)) {
+        items.push({ name: item.name, location: item.location, icon: item.icon || '', addedAt: new Date().toISOString() });
+        savePantry(items);
+    }
+    renderPantry();
+    renderSuggestions();
+}
+
+function addAllSuggestions(location) {
+    const items = getPantry();
+    const pantryNames = new Set(items.map(i => i.name));
+    const toAdd = commonItems.filter(i => i.location === location && !pantryNames.has(i.name));
+    toAdd.forEach(s => items.push({ name: s.name, location: s.location, icon: s.icon || '', addedAt: new Date().toISOString() }));
+    savePantry(items);
+    renderPantry();
+    renderSuggestions();
+}
+
+function dismissSuggestions() {
+    localStorage.setItem(SUGGESTIONS_DISMISSED_KEY, '1');
+    const el = document.getElementById('suggestions-section');
+    if (el) el.style.display = 'none';
+}
+
+function renderSuggestions() {
+    const container = document.getElementById('suggestions-section');
+    if (!container) return;
+    if (localStorage.getItem(SUGGESTIONS_DISMISSED_KEY) === '1') { container.style.display = 'none'; return; }
+
+    const suggestions = getSuggestions();
+    if (!suggestions.length) { container.style.display = 'none'; return; }
+
+    container.style.display = '';
+    const list = document.getElementById('suggestions-list');
+    while (list.firstChild) list.removeChild(list.firstChild);
+
+    const groups = { fridge: [], pantry: [], freezer: [] };
+    suggestions.forEach(s => { if (groups[s.location]) groups[s.location].push(s); });
+
+    ['fridge', 'pantry', 'freezer'].forEach(loc => {
+        if (!groups[loc].length) return;
+        const header = document.createElement('div');
+        header.className = 'suggestions-group-header';
+        const icon = locationIcons[loc] || '';
+        const label = document.createElement('span');
+        label.textContent = icon + ' ' + loc.charAt(0).toUpperCase() + loc.slice(1);
+        header.appendChild(label);
+        const addAll = document.createElement('button');
+        addAll.className = 'suggestion-add-all';
+        addAll.textContent = 'Add all';
+        addAll.addEventListener('click', function() { addAllSuggestions(loc); });
+        header.appendChild(addAll);
+        list.appendChild(header);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'suggestions-group';
+        groups[loc].forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = 'suggestion-chip';
+            btn.textContent = (s.icon ? s.icon + ' ' : '+ ') + s.name;
+            btn.addEventListener('click', function() { addSuggestion(s.name); });
+            wrap.appendChild(btn);
+        });
+        list.appendChild(wrap);
+    });
+}
+
 function renderPantry() {
     const items = getPantry();
     const list = document.getElementById('pantry-list');
@@ -118,7 +257,7 @@ function renderPantry() {
         div.className = 'pantry-item';
         div.setAttribute('data-location', item.location);
 
-        const icon = locationIcons[item.location] || '\u{1F3E0}';
+        const icon = item.icon || locationIcons[item.location] || '\u{1F3E0}';
 
         const info = document.createElement('span');
         info.className = 'pantry-item-info';
@@ -140,6 +279,9 @@ function renderPantry() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', renderPantry);
+document.addEventListener('DOMContentLoaded', function() {
+    renderPantry();
+    renderSuggestions();
+});
 </script>
 {{end}}
