@@ -48,6 +48,7 @@ GET  /shopping-list?slugs=a,b,c     Server-rendered shopping list
 GET  /new                           Recipe creation wizard
 GET  /pantry                        Pantry & fridge inventory (localStorage)
 POST /api/recipe                    Create recipe (JSON: title, category, markdown)
+POST /api/recipe/import-url         Import recipe from external URL (JSON-LD extraction)
 POST /api/image                     Upload recipe image
 POST /webhook                       GitHub push webhook (HMAC-SHA256)
 GET  /static/*                      Static assets
@@ -126,6 +127,13 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [x] Branded print layout with logo (single-page, 3-column, compact)
 - [x] Pantry & fridge inventory page (localStorage, add/remove/filter by location)
 - [x] On-hand item detection in shopping list (fuzzy match against pantry inventory)
+- [x] Buy units -- standard purchase quantities per ingredient (e.g., "1 lb / 4 sticks")
+- [x] Prepopulated pantry suggestions with emoji icons, grouped by fridge/pantry/freezer
+- [x] Two-trip shopping lists (shelf-stable in trip 1, perishables split by early/late week)
+- [x] Gas tank reminder for Libby on shopping list printouts
+- [x] Meal plan dropdown selects with category-grouped recipe choices
+- [x] Recipe URL import via JSON-LD extraction with source attribution
+- [x] Google recipe search integration on import tab
 
 ### TODO
 
@@ -145,6 +153,7 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [ ] Recipe scaling (multiply ingredient quantities)
 - [ ] Recipe editing/deletion from the web UI
 - [ ] PostgreSQL migration (when needed)
+- [ ] Share recipes via SMS/WhatsApp (Web Share API or Twilio)
 
 ## Authentication (Google OAuth2)
 

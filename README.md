@@ -46,12 +46,16 @@ You can also add recipes directly from the website using the "+ New Recipe" butt
 ## Features
 
 - **Search & browse** -- live search, category tabs, tag filtering
-- **Meal planning** -- drag recipes into a weekly meal plan (localStorage)
-- **Shopping list** -- auto-generated from meal plan recipes, grouped by grocery store department
+- **Meal planning** -- dropdown selects for 4 slots per meal, split into early/late week sections
+- **Shopping list** -- auto-generated from meal plan, grouped by grocery store department with price estimates
+- **Two-trip shopping** -- shelf-stable items in trip 1, perishables split by early/late week to reduce spoilage
+- **Buy units** -- standard purchase sizes shown per ingredient (e.g., "1 lb / 4 sticks" for butter)
 - **Pantry staples** -- common items (salt, oil, flour, spices) flagged and excluded from estimated total
-- **Pantry & fridge inventory** -- track what you have on hand; on-hand items auto-detected on the shopping list via fuzzy matching
-- **Print-friendly** -- branded single-page shopping list (3-column, compact layout with logo)
-- **Recipe creation** -- step-by-step wizard or markdown file upload with syntax guide
+- **Pantry & fridge inventory** -- track what you have on hand with prepopulated suggestion chips (emoji icons, grouped by location); on-hand items auto-detected on the shopping list via fuzzy matching
+- **Print-friendly** -- branded single-page shopping list (side-by-side trips, compact layout with logo)
+- **Recipe creation** -- step-by-step wizard, markdown file upload, or import from URL
+- **URL import** -- paste a recipe URL to extract data via JSON-LD; source attribution on recipe detail pages
+- **Recipe search** -- search Google for recipes and import directly from the results
 - **Kitchen mode** -- screen wake lock keeps your phone awake while cooking
 - **Mobile-first** -- responsive design with touch-friendly controls
 
