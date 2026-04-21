@@ -155,6 +155,8 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [ ] Recipe editing/deletion from the web UI
 - [ ] PostgreSQL migration (when needed)
 - [ ] Share recipes via SMS/WhatsApp (Web Share API or Twilio)
+- [ ] Compose recipes from existing sub-recipes (e.g., reuse dough/sauce recipes as ingredients in new recipes)
+- [ ] AI recipe generation from an idea or prompt (e.g., "something with chicken and mushrooms")
 
 ## Authentication (Google OAuth2)
 

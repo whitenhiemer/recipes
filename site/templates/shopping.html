@@ -13,6 +13,7 @@
     <div class="shopping-actions">
         <button onclick="saveShoppingList()">Save List</button>
         <button class="secondary" onclick="window.print()">Print</button>
+        <button class="secondary" onclick="togglePrintPreview()">Preview Print</button>
         <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
     </div>
     <div class="pantry-toggle">
@@ -24,6 +25,10 @@
             <input type="checkbox" id="hide-on-hand" onchange="applyFilters()">
             Hide items on hand
         </label>
+    </div>
+    <div id="print-preview-container" style="display:none">
+        <div class="print-preview-frame" id="print-preview-frame"></div>
+        <button class="secondary" onclick="togglePrintPreview()" style="margin-top:0.5rem">Close Preview</button>
     </div>
     <div class="trip-tabs">
         <button class="trip-tab active" onclick="switchTrip('trip1', this)">Trip 1 — Early Week</button>
@@ -99,6 +104,7 @@
     <div class="shopping-actions">
         <button onclick="saveShoppingList()">Save List</button>
         <button class="secondary" onclick="window.print()">Print</button>
+        <button class="secondary" onclick="togglePrintPreview()">Preview Print</button>
         <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
     </div>
     <div class="pantry-toggle">
@@ -110,6 +116,10 @@
             <input type="checkbox" id="hide-on-hand" onchange="applyFilters()">
             Hide items on hand
         </label>
+    </div>
+    <div id="print-preview-container" style="display:none">
+        <div class="print-preview-frame" id="print-preview-frame"></div>
+        <button class="secondary" onclick="togglePrintPreview()" style="margin-top:0.5rem">Close Preview</button>
     </div>
     <div id="shopping-list">
         {{range .Departments}}
@@ -145,6 +155,7 @@
     {{else if .HasSaved}}
     <div class="shopping-actions">
         <button class="secondary" onclick="window.print()">Print</button>
+        <button class="secondary" onclick="togglePrintPreview()">Preview Print</button>
         <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
         <button class="secondary outline" onclick="clearSavedShoppingList()">Clear Saved List</button>
     </div>
@@ -157,6 +168,10 @@
             <input type="checkbox" id="hide-on-hand" onchange="applyFilters()">
             Hide items on hand
         </label>
+    </div>
+    <div id="print-preview-container" style="display:none">
+        <div class="print-preview-frame" id="print-preview-frame"></div>
+        <button class="secondary" onclick="togglePrintPreview()" style="margin-top:0.5rem">Close Preview</button>
     </div>
     <div id="shopping-list"></div>
     {{else}}
@@ -443,6 +458,127 @@ function copyShoppingList() {
     if (totalEl) lines.push('\n' + totalEl.textContent);
     lines.push('\nReminder: Libby, fill up the gas tank!');
     navigator.clipboard.writeText(lines.join('\n').trim()).then(() => alert('Copied to clipboard!'));
+}
+
+function togglePrintPreview() {
+    var container = document.getElementById('print-preview-container');
+    if (!container) return;
+
+    if (container.style.display !== 'none') {
+        container.style.display = 'none';
+        return;
+    }
+
+    var frame = document.getElementById('print-preview-frame');
+    while (frame.firstChild) frame.removeChild(frame.firstChild);
+
+    var page = document.createElement('div');
+    page.className = 'print-preview-page';
+
+    // Branded header
+    var header = document.createElement('div');
+    header.className = 'pp-header';
+    var logo = document.createElement('img');
+    logo.src = '/static/img/logo.png';
+    logo.alt = '';
+    logo.className = 'pp-logo';
+    header.appendChild(logo);
+    var headerText = document.createElement('div');
+    headerText.className = 'pp-header-text';
+    var brand = document.createElement('strong');
+    brand.textContent = 'House Woodward Gourmand';
+    headerText.appendChild(brand);
+    var subtitle = document.createElement('span');
+    subtitle.textContent = 'Shopping List';
+    headerText.appendChild(subtitle);
+    header.appendChild(headerText);
+    page.appendChild(header);
+
+    // Determine if trips or single list
+    var tripSections = document.querySelectorAll('.trip-section');
+    var hasTripLayout = tripSections.length > 0;
+
+    var listArea = document.createElement('div');
+    listArea.className = hasTripLayout ? 'pp-list pp-trips' : 'pp-list pp-columns';
+
+    if (hasTripLayout) {
+        for (var t = 0; t < tripSections.length; t++) {
+            var tripCol = document.createElement('div');
+            tripCol.className = 'pp-trip-col';
+            var tripLabel = document.createElement('div');
+            tripLabel.className = 'pp-trip-label';
+            tripLabel.textContent = tripSections[t].getAttribute('data-trip') === 'trip1' ? 'Trip 1 \u2014 Early Week' : 'Trip 2 \u2014 Late Week';
+            tripCol.appendChild(tripLabel);
+            appendDepts(tripSections[t], tripCol);
+
+            var tripTotal = tripSections[t].querySelector('.shopping-total strong');
+            if (tripTotal) {
+                var tt = document.createElement('div');
+                tt.className = 'pp-total pp-trip-total';
+                tt.textContent = tripTotal.textContent;
+                tripCol.appendChild(tt);
+            }
+            listArea.appendChild(tripCol);
+        }
+    } else {
+        appendDepts(document.getElementById('shopping-list'), listArea);
+    }
+
+    page.appendChild(listArea);
+
+    // Combined total
+    var mainTotal = document.querySelector('section > .shopping-total strong');
+    if (!mainTotal) mainTotal = document.querySelector('.shopping-total strong');
+    if (mainTotal) {
+        var totalDiv = document.createElement('div');
+        totalDiv.className = 'pp-total pp-combined-total';
+        totalDiv.textContent = mainTotal.textContent;
+        page.appendChild(totalDiv);
+    }
+
+    // Gas reminder
+    var reminder = document.createElement('div');
+    reminder.className = 'pp-reminder';
+    reminder.textContent = 'Libby \u2014 don\u2019t forget to fill up the gas tank!';
+    page.appendChild(reminder);
+
+    frame.appendChild(page);
+    container.style.display = '';
+}
+
+function appendDepts(source, target) {
+    var depts = source.querySelectorAll('.shopping-dept');
+    for (var d = 0; d < depts.length; d++) {
+        if (depts[d].style.display === 'none') continue;
+        var dept = document.createElement('div');
+        dept.className = 'pp-dept';
+        var dh = document.createElement('div');
+        dh.className = 'pp-dept-header';
+        dh.textContent = depts[d].querySelector('.dept-header').textContent;
+        dept.appendChild(dh);
+
+        var items = depts[d].querySelectorAll('.shopping-item:not(.hide-pantry):not(.hide-on-hand):not(.is-pantry):not(.is-on-hand)');
+        for (var i = 0; i < items.length; i++) {
+            var row = document.createElement('div');
+            row.className = 'pp-item';
+            var cb = document.createElement('span');
+            cb.className = 'pp-checkbox';
+            row.appendChild(cb);
+            var name = document.createElement('span');
+            name.className = 'pp-name';
+            name.textContent = items[i].querySelector('strong').textContent;
+            row.appendChild(name);
+            var priceEl = items[i].querySelector('.item-price');
+            if (priceEl) {
+                var price = document.createElement('span');
+                price.className = 'pp-price';
+                price.textContent = priceEl.textContent;
+                row.appendChild(price);
+            }
+            dept.appendChild(row);
+        }
+        if (items.length > 0) target.appendChild(dept);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

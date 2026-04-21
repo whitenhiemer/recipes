@@ -973,6 +973,144 @@ nav ul li a {
     display: none;
 }
 
+/* Print Preview */
+.print-preview-frame {
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: #fff;
+    overflow: auto;
+    max-height: 80vh;
+}
+
+.print-preview-page {
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #222;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.pp-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 2px solid #333;
+}
+
+.pp-logo {
+    height: 30px;
+    width: auto;
+}
+
+.pp-header-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.pp-header-text strong {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.pp-header-text span {
+    font-size: 11px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.pp-list.pp-columns {
+    column-count: 3;
+    column-gap: 12px;
+}
+
+.pp-list.pp-trips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+}
+
+.pp-trip-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1.5px solid #333;
+    padding-bottom: 1px;
+    margin-bottom: 3px;
+}
+
+.pp-dept {
+    break-inside: avoid;
+    margin-bottom: 4px;
+}
+
+.pp-dept-header {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid #aaa;
+    padding-bottom: 1px;
+    margin-bottom: 1px;
+}
+
+.pp-item {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.pp-checkbox {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border: 1px solid #666;
+    border-radius: 1px;
+    flex-shrink: 0;
+}
+
+.pp-name {
+    font-weight: 500;
+}
+
+.pp-price {
+    margin-left: auto;
+    font-size: 11px;
+    opacity: 0.5;
+}
+
+.pp-total {
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+    margin-top: 4px;
+    padding-top: 2px;
+    border-top: 1px solid #666;
+}
+
+.pp-combined-total {
+    font-size: 13px;
+    border-top: 2px solid #333;
+    margin-top: 6px;
+    padding-top: 3px;
+}
+
+.pp-reminder {
+    margin-top: 6px;
+    font-size: 12px;
+    font-style: italic;
+    text-align: center;
+}
+
 /* Print header -- hidden on screen */
 .print-header {
     display: none;
@@ -1022,7 +1160,7 @@ nav ul li a {
     nav, footer, header, .shopping-actions, .mealplan-actions, .mealplan-sidebar,
     .search-bar, .category-tabs, .wake-lock-toggle, .new-recipe-tabs,
     .home-toolbar, .new-recipe-btn, .pantry-toggle, .trip-tabs, .trip-desc,
-    .servings-control, h2 {
+    .servings-control, #print-preview-container, h2 {
         display: none !important;
     }
 
@@ -1039,8 +1177,8 @@ nav ul li a {
     }
 
     html, body {
-        font-size: 9px !important;
-        line-height: 1.25 !important;
+        font-size: 13px !important;
+        line-height: 1.35 !important;
         font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif !important;
     }
 
@@ -1109,7 +1247,7 @@ nav ul li a {
     }
 
     .dept-header {
-        font-size: 7px !important;
+        font-size: 11px !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.08em !important;
@@ -1126,7 +1264,7 @@ nav ul li a {
     }
 
     .shopping-item label {
-        font-size: 8px !important;
+        font-size: 12px !important;
         min-height: auto !important;
         gap: 2px !important;
         padding: 0 !important;
@@ -1135,8 +1273,8 @@ nav ul li a {
     }
 
     .shopping-item input[type="checkbox"] {
-        width: 7px !important;
-        height: 7px !important;
+        width: 9px !important;
+        height: 9px !important;
         margin: 0 !important;
         flex-shrink: 0;
         -webkit-appearance: none;
@@ -1154,12 +1292,12 @@ nav ul li a {
     }
 
     .shopping-item strong {
-        font-size: 8px !important;
+        font-size: 12px !important;
         font-weight: 500 !important;
     }
 
     .item-price {
-        font-size: 7px !important;
+        font-size: 11px !important;
         margin-left: auto !important;
         opacity: 0.5;
     }
@@ -1171,14 +1309,14 @@ nav ul li a {
     .shopping-total {
         margin: 4px 0 0 0 !important;
         padding: 2px 0 0 0 !important;
-        font-size: 8px !important;
+        font-size: 12px !important;
         border-top: 1px solid #666 !important;
         text-align: right;
     }
 
     /* Combined total spans full width */
     section > .shopping-total {
-        font-size: 9px !important;
+        font-size: 13px !important;
         border-top: 2px solid #333 !important;
         column-span: all;
     }
@@ -1189,7 +1327,7 @@ nav ul li a {
     }
 
     .shopping-total-note {
-        font-size: 6px !important;
+        font-size: 10px !important;
         opacity: 0.5;
         text-align: right;
     }
@@ -1207,7 +1345,7 @@ nav ul li a {
     .trip-section::before {
         content: attr(data-trip);
         display: block;
-        font-size: 8px !important;
+        font-size: 12px !important;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -1227,7 +1365,7 @@ nav ul li a {
     .shopping-reminder {
         margin-top: 4px !important;
         padding: 2px 0 0 0 !important;
-        font-size: 8px !important;
+        font-size: 12px !important;
         font-style: italic;
         text-align: center;
         border: none !important;
