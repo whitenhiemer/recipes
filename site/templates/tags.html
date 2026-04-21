@@ -1,0 +1,14 @@
+{{template "layout" .}}
+{{define "content"}}
+<section>
+    <h2>Tags</h2>
+    <div class="tags">
+        {{range .Tags}}
+        <a href="/tags/{{.}}" class="tag">{{.}}</a>
+        {{end}}
+        {{if not .Tags}}
+        <p>No tags yet. Add tags to your recipe frontmatter!</p>
+        {{end}}
+    </div>
+</section>
+{{end}}

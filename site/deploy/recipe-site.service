@@ -1,0 +1,28 @@
+[Unit]
+Description=Recipe Site
+After=network.target
+
+[Service]
+Type=simple
+User=recipe-site
+Group=recipe-site
+WorkingDirectory=/opt/recipe-site/repo/site
+ExecStart=/opt/recipe-site/recipe-site \
+    -addr=127.0.0.1:8080 \
+    -recipes=/opt/recipe-site/repo \
+    -webhook-secret-file=/opt/recipe-site/.webhook-secret
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/recipe-site/repo
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+
+Environment=GOMAXPROCS=1
+
+[Install]
+WantedBy=multi-user.target

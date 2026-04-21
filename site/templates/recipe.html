@@ -1,0 +1,14 @@
+{{template "layout" .}}
+{{define "content"}}
+<article>
+    <a href="/">&larr; Back to recipes</a>
+    <div class="recipe-detail">
+        {{.Content}}
+    </div>
+    {{if .Recipe.Tags}}
+    <div class="tags">
+        {{range .Recipe.Tags}}<a href="/tags/{{.}}" class="tag">{{.}}</a>{{end}}
+    </div>
+    {{end}}
+</article>
+{{end}}

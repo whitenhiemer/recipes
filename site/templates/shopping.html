@@ -1,0 +1,30 @@
+{{template "layout" .}}
+{{define "content"}}
+<section>
+    <h2>Shopping List</h2>
+    {{if .Items}}
+    <div class="shopping-actions">
+        <button onclick="window.print()">Print</button>
+        <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
+    </div>
+    <div id="shopping-list">
+        {{range .Items}}
+        <div class="shopping-item">
+            <label>
+                <input type="checkbox" onchange="toggleShoppingItem(this)">
+                <strong>{{.Name}}</strong>
+            </label>
+            <ul>
+                {{range .Amounts}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <p>No items. Build a meal plan first, then generate a shopping list.</p>
+    <a href="/mealplan" role="button">Go to Meal Plan</a>
+    {{end}}
+</section>
+{{end}}

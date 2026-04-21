@@ -1,0 +1,20 @@
+{{range .Recipes}}
+<article class="recipe-card">
+    <a href="/recipes/{{.Category}}/{{.Slug}}">
+        <h3>{{.Title}}</h3>
+        <p class="recipe-meta">
+            {{if .PrepTime}}Prep: {{.PrepTime}}{{end}}
+            {{if .CookTime}} | Cook: {{.CookTime}}{{end}}
+            {{if .Servings}} | Serves: {{.Servings}}{{end}}
+        </p>
+        <p class="recipe-category">{{.Category}}</p>
+        {{if .Tags}}
+        <div class="tags">
+            {{range .Tags}}<span class="tag">{{.}}</span>{{end}}
+        </div>
+        {{end}}
+    </a>
+</article>
+{{else}}
+<p>No recipes match your search.</p>
+{{end}}

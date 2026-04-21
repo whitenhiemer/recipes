@@ -1,0 +1,43 @@
+{{template "layout" .}}
+{{define "content"}}
+<section>
+    <div class="search-bar">
+        <input type="search" name="q" placeholder="Search recipes..."
+               hx-get="/search" hx-trigger="keyup changed delay:300ms"
+               hx-target="#recipe-grid" hx-swap="innerHTML"
+               value="{{.Query}}">
+    </div>
+
+    {{if .Categories}}
+    <div class="category-tabs">
+        <a href="/" class="{{if not .ActiveCat}}active{{end}}">All</a>
+        {{range .Categories}}
+        <a href="/recipes?cat={{.}}" class="{{if eq . $.ActiveCat}}active{{end}}">{{.}}</a>
+        {{end}}
+    </div>
+    {{end}}
+
+    <div id="recipe-grid" class="grid recipe-grid">
+        {{range .Recipes}}
+        <article class="recipe-card">
+            <a href="/recipes/{{.Category}}/{{.Slug}}">
+                <h3>{{.Title}}</h3>
+                <p class="recipe-meta">
+                    {{if .PrepTime}}Prep: {{.PrepTime}}{{end}}
+                    {{if .CookTime}} | Cook: {{.CookTime}}{{end}}
+                    {{if .Servings}} | Serves: {{.Servings}}{{end}}
+                </p>
+                <p class="recipe-category">{{.Category}}</p>
+                {{if .Tags}}
+                <div class="tags">
+                    {{range .Tags}}<span class="tag">{{.}}</span>{{end}}
+                </div>
+                {{end}}
+            </a>
+        </article>
+        {{else}}
+        <p>No recipes found. Add some markdown files to the recipes directory!</p>
+        {{end}}
+    </div>
+</section>
+{{end}}
