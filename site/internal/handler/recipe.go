@@ -113,12 +113,14 @@ func (s *Server) handleTagRecipes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleMealPlan(w http.ResponseWriter, r *http.Request) {
+	treats := append(s.idx.GetByCategory("desserts"), s.idx.GetByCategory("snacks")...)
 	data := map[string]interface{}{
 		"Title":            "Meal Plan",
 		"Recipes":          s.idx.GetAllRecipes(),
 		"BreakfastRecipes": s.idx.GetByCategory("breakfast"),
 		"LunchRecipes":     s.idx.GetByCategory("lunch"),
 		"DinnerRecipes":    s.idx.GetByCategory("dinners"),
+		"TreatsRecipes":    treats,
 	}
 	s.render(w, "mealplan", data)
 }

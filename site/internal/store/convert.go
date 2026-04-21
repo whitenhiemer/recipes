@@ -23,7 +23,7 @@ func RowToRecipe(row *RecipeRow) *recipe.Recipe {
 		}
 	}
 
-	return &recipe.Recipe{
+	r := &recipe.Recipe{
 		Slug:         row.Slug,
 		Title:        row.Title,
 		Category:     row.Category,
@@ -39,4 +39,6 @@ func RowToRecipe(row *RecipeRow) *recipe.Recipe {
 		SourceURL:    row.SourceURL,
 		ModTime:      row.UpdatedAt,
 	}
+	r.HasCapsaicin = recipe.DetectCapsaicin(ings)
+	return r
 }

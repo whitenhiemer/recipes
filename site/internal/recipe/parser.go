@@ -128,6 +128,8 @@ func ParseMarkdown(data []byte, slug, category string) (*Recipe, error) {
 		r.Notes = []string{}
 	}
 
+	r.HasCapsaicin = DetectCapsaicin(r.Ingredients)
+
 	return r, nil
 }
 

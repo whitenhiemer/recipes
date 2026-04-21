@@ -248,6 +248,84 @@
     padding: 0.5rem 0;
 }
 
+/* Capsaicin / Not Tamlin Safe */
+.tamlin-unsafe-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #d32f2f;
+    background: #ffebee;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.5rem;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.tamlin-unsafe-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #ffebee;
+    color: #b71c1c;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #d32f2f;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.tamlin-icon-danger {
+    border: 2px solid #d32f2f;
+    filter: saturate(0.3);
+}
+
+/* Tamlin Safe */
+.tamlin-safe-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #2e7d32;
+    background: #e8f5e9;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.5rem;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.tamlin-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.tamlin-safe-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #e8f5e9;
+    color: #1b5e20;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #2e7d32;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.tamlin-banner-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
 /* Servings Control */
 .servings-control {
     display: flex;
@@ -622,7 +700,7 @@ nav ul li a {
     }
 
     .mealplan-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -630,6 +708,10 @@ nav ul li a {
 @media (min-width: 992px) {
     .recipe-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .mealplan-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 

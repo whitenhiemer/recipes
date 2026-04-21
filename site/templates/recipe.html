@@ -17,6 +17,18 @@
         {{if .Recipe.Servings}}<span class="servings-original">(recipe makes {{.Recipe.Servings}})</span>{{end}}
     </div>
 
+    {{if .Recipe.HasCapsaicin}}
+    <div class="tamlin-unsafe-banner">
+        <img src="/static/img/tamlin.png" alt="" class="tamlin-banner-icon tamlin-icon-danger">
+        <span><strong>NOT Tamlin Safe!</strong> — this recipe will make Tamlin cry. Contains capsaicin.</span>
+    </div>
+    {{else}}
+    <div class="tamlin-safe-banner">
+        <img src="/static/img/tamlin.png" alt="" class="tamlin-banner-icon">
+        <span><strong>Tamlin Safe</strong> — no capsaicin in this recipe</span>
+    </div>
+    {{end}}
+
     <div class="recipe-detail" id="recipe-detail">
         {{.Content}}
     </div>

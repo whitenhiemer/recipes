@@ -1,16 +1,18 @@
 // Meal Plan - localStorage backed
-// Structure: { breakfast: [{slug, title}, ...], lunch: [...], dinner: [...] }
-// Each meal type has up to 4 slots
+// Structure: { breakfast: [...], lunch: [...], dinner: [...], treats: [...] }
+// Main meals have 4 slots, treats has 2
 const MEALPLAN_KEY = 'recipe-mealplan';
 const SLOTS_PER_MEAL = 4;
+const SLOTS_PER_TREATS = 2;
 
 function getMealPlan() {
     const data = localStorage.getItem(MEALPLAN_KEY);
-    if (!data) return { breakfast: [], lunch: [], dinner: [] };
+    if (!data) return { breakfast: [], lunch: [], dinner: [], treats: [] };
     const plan = JSON.parse(data);
     if (!plan.breakfast) plan.breakfast = [];
     if (!plan.lunch) plan.lunch = [];
     if (!plan.dinner) plan.dinner = [];
+    if (!plan.treats) plan.treats = [];
     return plan;
 }
 
@@ -21,9 +23,10 @@ function saveMealPlan(plan) {
 function addToMealPlan(slug, title) {
     const meal = document.getElementById('mealplan-meal').value;
     const plan = getMealPlan();
+    const maxSlots = meal === 'treats' ? SLOTS_PER_TREATS : SLOTS_PER_MEAL;
 
-    if (plan[meal].length >= SLOTS_PER_MEAL) {
-        alert('All 4 ' + meal + ' slots are full. Clear one first.');
+    if (plan[meal].length >= maxSlots) {
+        alert('All ' + maxSlots + ' ' + meal + ' slots are full. Clear one first.');
         return;
     }
 
@@ -115,7 +118,7 @@ function buildSlotOptions(select, meal, selectedSlug) {
 function renderMealPlan() {
     var plan = getMealPlan();
 
-    ['breakfast', 'lunch', 'dinner'].forEach(function(meal) {
+    ['breakfast', 'lunch', 'dinner', 'treats'].forEach(function(meal) {
         var slots = document.querySelectorAll('.meal-slot[data-meal="' + meal + '"]');
         slots.forEach(function(slot, i) {
             var select = slot.querySelector('.slot-select');
@@ -152,6 +155,14 @@ function generateShoppingList() {
         });
     });
 
+    // Treats go to trip 1 (shelf-stable)
+    (plan.treats || []).forEach(entry => {
+        if (!trip1.has(entry.slug)) {
+            trip1Slugs.push(entry.slug);
+            trip1.add(entry.slug);
+        }
+    });
+
     if (trip1Slugs.length === 0 && trip2Slugs.length === 0) {
         alert('Add recipes to your meal plan first.');
         return;
@@ -173,7 +184,7 @@ function getRecipeData() {
     if (!el) return null;
     const data = JSON.parse(el.textContent);
     // Remove trailing nulls from template comma hack
-    ['breakfast', 'lunch', 'dinner', 'all'].forEach(key => {
+    ['breakfast', 'lunch', 'dinner', 'treats', 'all'].forEach(key => {
         if (data[key]) data[key] = data[key].filter(r => r !== null);
     });
     return data;
@@ -192,13 +203,12 @@ function randomizeMealPlan() {
     const data = getRecipeData();
     if (!data) return;
 
-    const plan = { breakfast: [], lunch: [], dinner: [] };
+    const plan = { breakfast: [], lunch: [], dinner: [], treats: [] };
     const allRecipes = data.all || [];
 
     ['breakfast', 'lunch', 'dinner'].forEach(meal => {
         let pool = data[meal] || [];
 
-        // Fall back to all recipes if category pool is too small
         if (pool.length < SLOTS_PER_MEAL) {
             pool = allRecipes.map(r => ({ slug: r.slug, title: r.title }));
         }
@@ -206,6 +216,13 @@ function randomizeMealPlan() {
         const picked = shuffle(pool).slice(0, SLOTS_PER_MEAL);
         plan[meal] = picked.map(r => ({ slug: r.slug, title: r.title }));
     });
+
+    let treatsPool = data.treats || [];
+    if (treatsPool.length < SLOTS_PER_TREATS) {
+        treatsPool = allRecipes.map(r => ({ slug: r.slug, title: r.title }));
+    }
+    const treatsP = shuffle(treatsPool).slice(0, SLOTS_PER_TREATS);
+    plan.treats = treatsP.map(r => ({ slug: r.slug, title: r.title }));
 
     saveMealPlan(plan);
     renderMealPlan();

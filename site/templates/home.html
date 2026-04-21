@@ -29,7 +29,7 @@
                 {{else}}
                 <div class="recipe-thumb-placeholder"></div>
                 {{end}}
-                <h3>{{.Title}}</h3>
+                <h3>{{.Title}}{{if .HasCapsaicin}} <span class="tamlin-unsafe-badge" title="NOT Tamlin Safe — contains capsaicin"><img src="/static/img/tamlin.png" alt="" class="tamlin-icon tamlin-icon-danger">Not Tamlin Safe</span>{{else}} <span class="tamlin-safe-badge" title="Tamlin Safe — no capsaicin"><img src="/static/img/tamlin.png" alt="" class="tamlin-icon">Tamlin Safe</span>{{end}}</h3>
                 <p class="recipe-meta">
                     {{if .PrepTime}}Prep: {{.PrepTime}}{{end}}
                     {{if .CookTime}} | Cook: {{.CookTime}}{{end}}
