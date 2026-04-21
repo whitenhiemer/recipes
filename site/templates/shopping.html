@@ -4,15 +4,18 @@
     <h2>Shopping List</h2>
     {{if .Items}}
     <div class="shopping-actions">
-        <button onclick="window.print()">Print</button>
+        <button onclick="saveShoppingList()">Save List</button>
+        <button class="secondary" onclick="window.print()">Print</button>
         <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
     </div>
     <div id="shopping-list">
-        {{range .Items}}
-        <div class="shopping-item">
+        {{range .PricedItems}}
+        <div class="shopping-item" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}" data-icon="{{.Icon}}">
             <label>
                 <input type="checkbox" onchange="toggleShoppingItem(this)">
+                <span class="item-icon">{{.Icon}}</span>
                 <strong>{{.Name}}</strong>
+                <span class="item-price">${{printf "%.2f" .Price}}</span>
             </label>
             <ul>
                 {{range .Amounts}}
@@ -22,9 +25,156 @@
         </div>
         {{end}}
     </div>
+    <div class="shopping-total">
+        <strong>Estimated Total: ${{printf "%.2f" .EstimatedTotal}}</strong>
+        <p class="shopping-total-note">Prices are estimates based on typical grocery store pricing</p>
+    </div>
+    {{else if .HasSaved}}
+    <div class="shopping-actions">
+        <button class="secondary" onclick="window.print()">Print</button>
+        <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
+        <button class="secondary outline" onclick="clearSavedShoppingList()">Clear Saved List</button>
+    </div>
+    <div id="shopping-list"></div>
     {{else}}
     <p>No items. Build a meal plan first, then generate a shopping list.</p>
     <a href="/mealplan" role="button">Go to Meal Plan</a>
     {{end}}
 </section>
+
+<script>
+const SHOPPING_KEY = 'recipe-shopping-list';
+
+function saveShoppingList() {
+    const items = [];
+    document.querySelectorAll('.shopping-item').forEach(el => {
+        const name = el.querySelector('strong').textContent;
+        const checked = el.querySelector('input[type="checkbox"]').checked;
+        const icon = el.getAttribute('data-icon') || '';
+        const price = el.getAttribute('data-price') || '0.00';
+        const amounts = [];
+        el.querySelectorAll('li').forEach(li => amounts.push(li.textContent));
+        items.push({ name, amounts, checked, icon, price });
+    });
+    localStorage.setItem(SHOPPING_KEY, JSON.stringify(items));
+    alert('Shopping list saved!');
+}
+
+function loadSavedShoppingList() {
+    const data = localStorage.getItem(SHOPPING_KEY);
+    if (!data) return false;
+
+    const items = JSON.parse(data);
+    if (!items.length) return false;
+
+    const container = document.getElementById('shopping-list');
+    if (!container) return false;
+
+    // Only load saved list if no server-rendered items exist
+    if (container.children.length > 0) return false;
+
+    let total = 0;
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'shopping-item';
+        div.setAttribute('data-name', item.name);
+        if (item.icon) div.setAttribute('data-icon', item.icon);
+        if (item.price) div.setAttribute('data-price', item.price);
+
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = item.checked;
+        checkbox.addEventListener('change', function() { toggleShoppingItem(this); });
+
+        label.appendChild(checkbox);
+
+        if (item.icon) {
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'item-icon';
+            iconSpan.textContent = item.icon;
+            label.appendChild(iconSpan);
+        }
+
+        const strong = document.createElement('strong');
+        strong.textContent = item.name;
+        if (item.checked) {
+            strong.style.textDecoration = 'line-through';
+            strong.style.opacity = '0.5';
+        }
+        label.appendChild(strong);
+
+        if (item.price && parseFloat(item.price) > 0) {
+            const priceSpan = document.createElement('span');
+            priceSpan.className = 'item-price';
+            priceSpan.textContent = '$' + parseFloat(item.price).toFixed(2);
+            label.appendChild(priceSpan);
+            total += parseFloat(item.price);
+        }
+
+        div.appendChild(label);
+
+        if (item.amounts && item.amounts.length) {
+            const ul = document.createElement('ul');
+            item.amounts.forEach(amt => {
+                const li = document.createElement('li');
+                li.textContent = amt;
+                ul.appendChild(li);
+            });
+            div.appendChild(ul);
+        }
+
+        container.appendChild(div);
+    });
+
+    if (total > 0) {
+        const totalDiv = document.createElement('div');
+        totalDiv.className = 'shopping-total';
+        const totalStrong = document.createElement('strong');
+        totalStrong.textContent = 'Estimated Total: $' + total.toFixed(2);
+        totalDiv.appendChild(totalStrong);
+        const note = document.createElement('p');
+        note.className = 'shopping-total-note';
+        note.textContent = 'Prices are estimates based on typical grocery store pricing';
+        totalDiv.appendChild(note);
+        container.parentNode.appendChild(totalDiv);
+    }
+
+    return true;
+}
+
+function clearSavedShoppingList() {
+    localStorage.removeItem(SHOPPING_KEY);
+    window.location.href = '/shopping-list';
+}
+
+function toggleShoppingItem(checkbox) {
+    const strong = checkbox.closest('label').querySelector('strong');
+    if (checkbox.checked) {
+        strong.style.textDecoration = 'line-through';
+        strong.style.opacity = '0.5';
+    } else {
+        strong.style.textDecoration = '';
+        strong.style.opacity = '';
+    }
+    updateSavedCheckedState();
+}
+
+function updateSavedCheckedState() {
+    const data = localStorage.getItem(SHOPPING_KEY);
+    if (!data) return;
+
+    const items = JSON.parse(data);
+    document.querySelectorAll('.shopping-item').forEach((el, i) => {
+        if (items[i]) {
+            items[i].checked = el.querySelector('input[type="checkbox"]').checked;
+        }
+    });
+    localStorage.setItem(SHOPPING_KEY, JSON.stringify(items));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSavedShoppingList();
+});
+</script>
 {{end}}

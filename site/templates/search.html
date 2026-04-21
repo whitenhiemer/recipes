@@ -1,6 +1,11 @@
 {{range .Recipes}}
 <article class="recipe-card">
     <a href="/recipes/{{.Category}}/{{.Slug}}">
+        {{if .Image}}
+        <img src="/static/img/recipes/{{.Image}}" alt="{{.Title}}" class="recipe-thumb" loading="lazy">
+        {{else}}
+        <div class="recipe-thumb-placeholder"></div>
+        {{end}}
         <h3>{{.Title}}</h3>
         <p class="recipe-meta">
             {{if .PrepTime}}Prep: {{.PrepTime}}{{end}}

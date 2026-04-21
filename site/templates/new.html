@@ -1,0 +1,260 @@
+{{template "layout" .}}
+{{define "content"}}
+<section>
+    <h2>New Recipe</h2>
+
+    <form id="recipe-wizard" class="recipe-wizard">
+        <!-- Step 1: Basics -->
+        <fieldset class="wizard-step" data-step="1">
+            <legend>Step 1: Basics</legend>
+            <label for="title">Recipe Name</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Smoked Brisket" required>
+
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+                <option value="">Select a category...</option>
+                {{range .Categories}}
+                <option value="{{.}}">{{.}}</option>
+                {{end}}
+            </select>
+
+            <div class="wizard-row">
+                <div>
+                    <label for="prep_time">Prep Time</label>
+                    <input type="text" id="prep_time" name="prep_time" placeholder="15 min">
+                </div>
+                <div>
+                    <label for="cook_time">Cook Time</label>
+                    <input type="text" id="cook_time" name="cook_time" placeholder="30 min">
+                </div>
+                <div>
+                    <label for="servings">Servings</label>
+                    <input type="text" id="servings" name="servings" placeholder="4">
+                </div>
+            </div>
+
+            <label for="tags">Tags (comma-separated)</label>
+            <input type="text" id="tags" name="tags" placeholder="quick, chicken, comfort-food">
+
+            <label for="recipe-image">Photo (optional)</label>
+            <div class="image-upload-area" id="image-upload-area">
+                <input type="file" id="recipe-image" accept="image/jpeg,image/png,image/webp" onchange="handleImageSelect(this)">
+                <img id="image-preview" class="image-preview" style="display:none">
+                <button type="button" id="image-remove" class="secondary image-remove-btn" style="display:none" onclick="removeImage()">Remove</button>
+            </div>
+
+            <div class="wizard-nav">
+                <span></span>
+                <button type="button" onclick="wizardNext()">Next</button>
+            </div>
+        </fieldset>
+
+        <!-- Step 2: Ingredients -->
+        <fieldset class="wizard-step" data-step="2" style="display:none">
+            <legend>Step 2: Ingredients</legend>
+            <p class="wizard-hint">One ingredient per line (e.g. "1 cup flour")</p>
+            <textarea id="ingredients" name="ingredients" rows="12" placeholder="1 cup flour&#10;2 tbsp butter&#10;1/2 tsp salt"></textarea>
+
+            <div class="wizard-nav">
+                <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
+                <button type="button" onclick="wizardNext()">Next</button>
+            </div>
+        </fieldset>
+
+        <!-- Step 3: Instructions -->
+        <fieldset class="wizard-step" data-step="3" style="display:none">
+            <legend>Step 3: Instructions</legend>
+            <p class="wizard-hint">One step per line. Numbering is added automatically.</p>
+            <textarea id="instructions" name="instructions" rows="12" placeholder="Preheat oven to 350F&#10;Mix dry ingredients together&#10;Add wet ingredients and stir"></textarea>
+
+            <div class="wizard-nav">
+                <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
+                <button type="button" onclick="wizardNext()">Next</button>
+            </div>
+        </fieldset>
+
+        <!-- Step 4: Notes & Review -->
+        <fieldset class="wizard-step" data-step="4" style="display:none">
+            <legend>Step 4: Notes</legend>
+            <p class="wizard-hint">Tips, variations, or substitutions. One per line (optional).</p>
+            <textarea id="notes" name="notes" rows="6" placeholder="Use room temperature butter for best results&#10;Can substitute milk for cream"></textarea>
+
+            <hr>
+            <h3>Preview</h3>
+            <pre id="recipe-preview" class="recipe-preview"></pre>
+
+            <div class="wizard-nav">
+                <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
+                <button type="submit">Save Recipe</button>
+            </div>
+        </fieldset>
+    </form>
+
+    <div id="wizard-result" style="display:none">
+        <p><span id="wizard-success-msg"></span> <a id="wizard-view-link" href="/">View it here</a>.</p>
+        <div class="wizard-nav">
+            <a href="/" role="button">Back to Recipes</a>
+            <a href="/new" role="button" class="secondary">Add Another</a>
+        </div>
+    </div>
+</section>
+
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+let uploadedImageFilename = '';
+
+function wizardNext() {
+    if (currentStep === 1) {
+        const title = document.getElementById('title').value.trim();
+        const category = document.getElementById('category').value;
+        if (!title) { document.getElementById('title').focus(); return; }
+        if (!category) { document.getElementById('category').focus(); return; }
+    }
+    if (currentStep < totalSteps) {
+        showStep(currentStep + 1);
+    }
+}
+
+function wizardPrev() {
+    if (currentStep > 1) {
+        showStep(currentStep - 1);
+    }
+}
+
+function showStep(step) {
+    document.querySelectorAll('.wizard-step').forEach(el => el.style.display = 'none');
+    document.querySelector('[data-step="' + step + '"]').style.display = '';
+    currentStep = step;
+    if (step === totalSteps) updatePreview();
+}
+
+function handleImageSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const preview = document.getElementById('image-preview');
+    const removeBtn = document.getElementById('image-remove');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.style.display = '';
+        removeBtn.style.display = '';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage() {
+    document.getElementById('recipe-image').value = '';
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('image-remove').style.display = 'none';
+    uploadedImageFilename = '';
+}
+
+async function uploadImage(slug) {
+    const input = document.getElementById('recipe-image');
+    if (!input.files[0]) return '';
+
+    const formData = new FormData();
+    formData.append('image', input.files[0]);
+    formData.append('slug', slug);
+
+    const resp = await fetch('/api/image', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error('Image upload failed: ' + err);
+    }
+
+    const result = await resp.json();
+    return result.filename;
+}
+
+function buildMarkdown(imageFilename) {
+    const title = document.getElementById('title').value.trim();
+    const tags = document.getElementById('tags').value.trim();
+    const prep = document.getElementById('prep_time').value.trim();
+    const cook = document.getElementById('cook_time').value.trim();
+    const servings = document.getElementById('servings').value.trim();
+    const ingredients = document.getElementById('ingredients').value.trim();
+    const instructions = document.getElementById('instructions').value.trim();
+    const notes = document.getElementById('notes').value.trim();
+
+    let md = '---\ntags: [' + tags.split(',').map(t => t.trim()).filter(t => t).join(', ') + ']\n';
+    if (imageFilename) {
+        md += 'image: ' + imageFilename + '\n';
+    }
+    md += '---\n';
+    md += '# ' + title + '\n\n';
+    md += '**Prep Time:** ' + (prep || 'X min') + ' | **Cook Time:** ' + (cook || 'X min') + ' | **Servings:** ' + (servings || 'X') + '\n\n';
+
+    md += '## Ingredients\n\n';
+    ingredients.split('\n').filter(l => l.trim()).forEach(line => {
+        md += '- ' + line.trim() + '\n';
+    });
+
+    md += '\n## Instructions\n\n';
+    let stepNum = 1;
+    instructions.split('\n').filter(l => l.trim()).forEach(line => {
+        md += stepNum + '. ' + line.trim().replace(/^\d+[\.\)]\s*/, '') + '\n';
+        stepNum++;
+    });
+
+    if (notes) {
+        md += '\n## Notes\n\n';
+        notes.split('\n').filter(l => l.trim()).forEach(line => {
+            md += '- ' + line.trim() + '\n';
+        });
+    }
+
+    return md;
+}
+
+function updatePreview() {
+    document.getElementById('recipe-preview').textContent = buildMarkdown(uploadedImageFilename || (document.getElementById('recipe-image').files[0] ? '(will be uploaded)' : ''));
+}
+
+document.getElementById('recipe-wizard').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const title = document.getElementById('title').value.trim();
+    const category = document.getElementById('category').value;
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    try {
+        let imageFilename = '';
+        if (document.getElementById('recipe-image').files[0]) {
+            imageFilename = await uploadImage(slug);
+        }
+
+        const data = {
+            title: title,
+            category: category,
+            markdown: buildMarkdown(imageFilename)
+        };
+
+        const resp = await fetch('/api/recipe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (resp.ok) {
+            const result = await resp.json();
+            document.getElementById('recipe-wizard').style.display = 'none';
+            document.getElementById('wizard-result').style.display = '';
+            document.getElementById('wizard-success-msg').textContent = 'Recipe saved!';
+            document.getElementById('wizard-view-link').href = '/recipes/' + encodeURIComponent(result.category) + '/' + encodeURIComponent(result.slug);
+        } else {
+            const err = await resp.text();
+            alert('Error saving recipe: ' + err);
+        }
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+});
+</script>
+{{end}}

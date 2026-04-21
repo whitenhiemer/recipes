@@ -2,62 +2,94 @@
 {{define "content"}}
 <section>
     <h2>Meal Plan</h2>
+    <p class="mealplan-subtitle">Plan 4 meals each for breakfast, lunch, and dinner. The other days are for eating out, leftovers, or winging it.</p>
+
     <div class="mealplan-container">
         <div class="mealplan-grid">
-            <table role="grid">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Breakfast</th>
-                        <th>Lunch</th>
-                        <th>Dinner</th>
-                    </tr>
-                </thead>
-                <tbody id="mealplan-body">
-                    {{range $day := (slice "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday")}}
-                    <tr>
-                        <td><strong>{{$day}}</strong></td>
-                        <td class="meal-slot" data-day="{{$day}}" data-meal="breakfast">
-                            <span class="slot-recipe"></span>
-                            <button class="slot-clear" onclick="clearSlot('{{$day}}', 'breakfast')" style="display:none">x</button>
-                        </td>
-                        <td class="meal-slot" data-day="{{$day}}" data-meal="lunch">
-                            <span class="slot-recipe"></span>
-                            <button class="slot-clear" onclick="clearSlot('{{$day}}', 'lunch')" style="display:none">x</button>
-                        </td>
-                        <td class="meal-slot" data-day="{{$day}}" data-meal="dinner">
-                            <span class="slot-recipe"></span>
-                            <button class="slot-clear" onclick="clearSlot('{{$day}}', 'dinner')" style="display:none">x</button>
-                        </td>
-                    </tr>
-                    {{end}}
-                </tbody>
-            </table>
+            <div class="mealplan-column">
+                <h3>Breakfast</h3>
+                <div class="mealplan-slots" id="breakfast-slots">
+                    <div class="meal-slot" data-meal="breakfast" data-slot="0">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('breakfast', 0)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="breakfast" data-slot="1">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('breakfast', 1)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="breakfast" data-slot="2">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('breakfast', 2)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="breakfast" data-slot="3">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('breakfast', 3)" style="display:none">x</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mealplan-column">
+                <h3>Lunch</h3>
+                <div class="mealplan-slots" id="lunch-slots">
+                    <div class="meal-slot" data-meal="lunch" data-slot="0">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('lunch', 0)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="lunch" data-slot="1">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('lunch', 1)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="lunch" data-slot="2">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('lunch', 2)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="lunch" data-slot="3">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('lunch', 3)" style="display:none">x</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mealplan-column">
+                <h3>Dinner</h3>
+                <div class="mealplan-slots" id="dinner-slots">
+                    <div class="meal-slot" data-meal="dinner" data-slot="0">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('dinner', 0)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="dinner" data-slot="1">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('dinner', 1)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="dinner" data-slot="2">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('dinner', 2)" style="display:none">x</button>
+                    </div>
+                    <div class="meal-slot" data-meal="dinner" data-slot="3">
+                        <span class="slot-recipe"></span>
+                        <button class="slot-clear" onclick="clearSlot('dinner', 3)" style="display:none">x</button>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <div class="mealplan-actions">
+            <button onclick="randomizeMealPlan()">Randomize</button>
             <button onclick="generateShoppingList()">Generate Shopping List</button>
             <button class="secondary" onclick="clearMealPlan()">Clear All</button>
         </div>
+
         <div class="mealplan-sidebar">
             <h3>Add Recipe</h3>
             <input type="search" id="mealplan-search" placeholder="Search recipes..." oninput="filterMealPlanRecipes(this.value)">
-            <select id="mealplan-day">
-                <option value="Monday">Monday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Friday">Friday</option>
-                <option value="Saturday">Saturday</option>
-                <option value="Sunday">Sunday</option>
-            </select>
-            <select id="mealplan-meal">
-                <option value="breakfast">Breakfast</option>
-                <option value="lunch">Lunch</option>
-                <option value="dinner">Dinner</option>
-            </select>
+            <div class="mealplan-meal-picker">
+                <select id="mealplan-meal">
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="dinner">Dinner</option>
+                </select>
+            </div>
             <div id="mealplan-recipe-list">
                 {{range .Recipes}}
-                <div class="mealplan-recipe-item" data-slug="{{.Slug}}" data-title="{{.Title}}" onclick="addToMealPlan('{{.Slug}}', '{{.Title}}')">
+                <div class="mealplan-recipe-item" data-slug="{{.Slug}}" data-title="{{.Title}}" data-category="{{.Category}}" onclick="addToMealPlan('{{.Slug}}', '{{.Title}}')">
                     {{.Title}} <small>({{.Category}})</small>
                 </div>
                 {{end}}
@@ -65,4 +97,12 @@
         </div>
     </div>
 </section>
+<script id="recipe-data" type="application/json">
+{
+    "breakfast": [{{range .BreakfastRecipes}}{"slug":"{{.Slug}}","title":"{{.Title}}"},{{end}}null],
+    "lunch": [{{range .LunchRecipes}}{"slug":"{{.Slug}}","title":"{{.Title}}"},{{end}}null],
+    "dinner": [{{range .DinnerRecipes}}{"slug":"{{.Slug}}","title":"{{.Title}}"},{{end}}null],
+    "all": [{{range .Recipes}}{"slug":"{{.Slug}}","title":"{{.Title}}","category":"{{.Category}}"},{{end}}null]
+}
+</script>
 {{end}}

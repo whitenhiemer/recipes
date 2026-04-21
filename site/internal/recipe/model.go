@@ -7,6 +7,7 @@ type Recipe struct {
 	Title        string
 	Category     string
 	Tags         []string
+	Image        string
 	PrepTime     string
 	CookTime     string
 	Servings     string

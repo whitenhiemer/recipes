@@ -1,11 +1,14 @@
 {{template "layout" .}}
 {{define "content"}}
 <section>
-    <div class="search-bar">
-        <input type="search" name="q" placeholder="Search recipes..."
-               hx-get="/search" hx-trigger="keyup changed delay:300ms"
-               hx-target="#recipe-grid" hx-swap="innerHTML"
-               value="{{.Query}}">
+    <div class="home-toolbar">
+        <div class="search-bar">
+            <input type="search" name="q" placeholder="Search recipes..."
+                   hx-get="/search" hx-trigger="keyup changed delay:300ms"
+                   hx-target="#recipe-grid" hx-swap="innerHTML"
+                   value="{{.Query}}">
+        </div>
+        <a href="/new" role="button" class="new-recipe-btn">+ New Recipe</a>
     </div>
 
     {{if .Categories}}
@@ -21,6 +24,11 @@
         {{range .Recipes}}
         <article class="recipe-card">
             <a href="/recipes/{{.Category}}/{{.Slug}}">
+                {{if .Image}}
+                <img src="/static/img/recipes/{{.Image}}" alt="{{.Title}}" class="recipe-thumb" loading="lazy">
+                {{else}}
+                <div class="recipe-thumb-placeholder"></div>
+                {{end}}
                 <h3>{{.Title}}</h3>
                 <p class="recipe-meta">
                     {{if .PrepTime}}Prep: {{.PrepTime}}{{end}}

@@ -26,11 +26,18 @@ func ParseRecipesDir(root string) ([]*Recipe, error) {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() || !strings.HasSuffix(info.Name(), ".md") {
+		if info.IsDir() {
+			rel, _ := filepath.Rel(root, path)
+			if rel == "site" || strings.HasPrefix(rel, "site/") || rel == ".git" || strings.HasPrefix(rel, ".git/") {
+				return filepath.SkipDir
+			}
 			return nil
 		}
-		name := info.Name()
-		if name == "README.md" || name == "TEMPLATE.md" {
+		if !strings.HasSuffix(info.Name(), ".md") {
+			return nil
+		}
+		rel, _ := filepath.Rel(root, path)
+		if filepath.Dir(rel) == "." {
 			return nil
 		}
 
@@ -92,6 +99,11 @@ func ParseRecipeFile(path string, root string) (*Recipe, error) {
 					r.Tags = append(r.Tags, s)
 				}
 			}
+		}
+	}
+	if img, ok := metaData["image"]; ok {
+		if s, ok := img.(string); ok {
+			r.Image = s
 		}
 	}
 

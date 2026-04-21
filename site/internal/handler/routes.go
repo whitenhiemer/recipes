@@ -28,6 +28,9 @@ func Register(mux *http.ServeMux, idx *recipe.Index, cfg *config.Config) {
 	mux.HandleFunc("GET /mealplan", s.handleMealPlan)
 	mux.HandleFunc("POST /api/shopping-list", s.handleShoppingListAPI)
 	mux.HandleFunc("GET /shopping-list", s.handleShoppingList)
+	mux.HandleFunc("GET /new", s.handleNewRecipe)
+	mux.HandleFunc("POST /api/recipe", s.handleCreateRecipeAPI)
+	mux.HandleFunc("POST /api/image", s.handleImageUpload)
 	mux.HandleFunc("POST /webhook", s.handleWebhook)
 
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -39,7 +42,7 @@ func (s *Server) loadTemplates() {
 
 	base := append([]string{layout}, partials...)
 
-	pages := []string{"home", "recipe", "search", "tags", "mealplan", "shopping"}
+	pages := []string{"home", "recipe", "search", "tags", "mealplan", "shopping", "new"}
 	s.templates = make(map[string]*template.Template)
 
 	for _, page := range pages {

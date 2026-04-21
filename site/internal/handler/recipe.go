@@ -4,6 +4,8 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+
+	"github.com/whitenhiemer/recipe-site/internal/recipe"
 )
 
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
@@ -108,8 +110,11 @@ func (s *Server) handleTagRecipes(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleMealPlan(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"Title":   "Meal Plan",
-		"Recipes": s.idx.GetAllRecipes(),
+		"Title":            "Meal Plan",
+		"Recipes":          s.idx.GetAllRecipes(),
+		"BreakfastRecipes": s.idx.GetByCategory("breakfast"),
+		"LunchRecipes":     s.idx.GetByCategory("lunch"),
+		"DinnerRecipes":    s.idx.GetByCategory("dinners"),
 	}
 	s.render(w, "mealplan", data)
 }
@@ -118,8 +123,9 @@ func (s *Server) handleShoppingList(w http.ResponseWriter, r *http.Request) {
 	slugParam := r.URL.Query().Get("slugs")
 	if slugParam == "" {
 		data := map[string]interface{}{
-			"Title": "Shopping List",
-			"Items": nil,
+			"Title":    "Shopping List",
+			"Items":    nil,
+			"HasSaved": true,
 		}
 		s.render(w, "shopping", data)
 		return
@@ -127,10 +133,14 @@ func (s *Server) handleShoppingList(w http.ResponseWriter, r *http.Request) {
 
 	slugs := strings.Split(slugParam, ",")
 	list := s.idx.GenerateShoppingList(slugs)
+	pricedItems, total := recipe.PriceShoppingList(list)
 
 	data := map[string]interface{}{
-		"Title": "Shopping List",
-		"Items": list.Items,
+		"Title":          "Shopping List",
+		"Items":          list.Items,
+		"PricedItems":    pricedItems,
+		"EstimatedTotal": total,
+		"HasSaved":       false,
 	}
 	s.render(w, "shopping", data)
 }

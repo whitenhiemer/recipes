@@ -6,6 +6,9 @@
         <input type="checkbox" id="wake-lock-toggle" onchange="toggleWakeLock(this.checked)">
         Keep screen on
     </label>
+    {{if .Recipe.Image}}
+    <img src="/static/img/recipes/{{.Recipe.Image}}" alt="{{.Recipe.Title}}" class="recipe-hero">
+    {{end}}
     <div class="recipe-detail">
         {{.Content}}
     </div>

@@ -1,9 +1,17 @@
 // Meal Plan - localStorage backed
+// Structure: { breakfast: [{slug, title}, ...], lunch: [...], dinner: [...] }
+// Each meal type has up to 4 slots
 const MEALPLAN_KEY = 'recipe-mealplan';
+const SLOTS_PER_MEAL = 4;
 
 function getMealPlan() {
     const data = localStorage.getItem(MEALPLAN_KEY);
-    return data ? JSON.parse(data) : {};
+    if (!data) return { breakfast: [], lunch: [], dinner: [] };
+    const plan = JSON.parse(data);
+    if (!plan.breakfast) plan.breakfast = [];
+    if (!plan.lunch) plan.lunch = [];
+    if (!plan.dinner) plan.dinner = [];
+    return plan;
 }
 
 function saveMealPlan(plan) {
@@ -11,22 +19,22 @@ function saveMealPlan(plan) {
 }
 
 function addToMealPlan(slug, title) {
-    const day = document.getElementById('mealplan-day').value;
     const meal = document.getElementById('mealplan-meal').value;
     const plan = getMealPlan();
 
-    if (!plan[day]) plan[day] = {};
-    plan[day][meal] = { slug: slug, title: title };
+    if (plan[meal].length >= SLOTS_PER_MEAL) {
+        alert('All 4 ' + meal + ' slots are full. Clear one first.');
+        return;
+    }
+
+    plan[meal].push({ slug: slug, title: title });
     saveMealPlan(plan);
     renderMealPlan();
 }
 
-function clearSlot(day, meal) {
+function clearSlot(meal, index) {
     const plan = getMealPlan();
-    if (plan[day]) {
-        delete plan[day][meal];
-        if (Object.keys(plan[day]).length === 0) delete plan[day];
-    }
+    plan[meal].splice(index, 1);
     saveMealPlan(plan);
     renderMealPlan();
 }
@@ -38,19 +46,31 @@ function clearMealPlan() {
 
 function renderMealPlan() {
     const plan = getMealPlan();
-    document.querySelectorAll('.meal-slot').forEach(slot => {
-        const day = slot.dataset.day;
-        const meal = slot.dataset.meal;
-        const recipeSpan = slot.querySelector('.slot-recipe');
-        const clearBtn = slot.querySelector('.slot-clear');
 
-        if (plan[day] && plan[day][meal]) {
-            recipeSpan.textContent = plan[day][meal].title;
-            clearBtn.style.display = 'inline';
-        } else {
-            recipeSpan.textContent = '';
-            clearBtn.style.display = 'none';
-        }
+    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+        const slots = document.querySelectorAll('.meal-slot[data-meal="' + meal + '"]');
+        slots.forEach((slot, i) => {
+            const recipeSpan = slot.querySelector('.slot-recipe');
+            const clearBtn = slot.querySelector('.slot-clear');
+            const entry = plan[meal][i];
+
+            if (entry) {
+                recipeSpan.textContent = entry.title;
+                recipeSpan.closest('.meal-slot').classList.add('filled');
+                clearBtn.style.display = 'inline';
+            } else {
+                recipeSpan.textContent = '';
+                recipeSpan.closest('.meal-slot').classList.remove('filled');
+                clearBtn.style.display = 'none';
+            }
+        });
+    });
+
+    // Update slot count display
+    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+        const count = plan[meal].length;
+        const counter = document.getElementById(meal + '-count');
+        if (counter) counter.textContent = count + ' / ' + SLOTS_PER_MEAL;
     });
 }
 
@@ -59,8 +79,8 @@ function generateShoppingList() {
     const slugs = [];
     const seen = new Set();
 
-    Object.values(plan).forEach(meals => {
-        Object.values(meals).forEach(entry => {
+    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+        plan[meal].forEach(entry => {
             if (!seen.has(entry.slug)) {
                 slugs.push(entry.slug);
                 seen.add(entry.slug);
@@ -76,12 +96,56 @@ function generateShoppingList() {
     window.location.href = '/shopping-list?slugs=' + slugs.join(',');
 }
 
+function getRecipeData() {
+    const el = document.getElementById('recipe-data');
+    if (!el) return null;
+    const data = JSON.parse(el.textContent);
+    // Remove trailing nulls from template comma hack
+    ['breakfast', 'lunch', 'dinner', 'all'].forEach(key => {
+        if (data[key]) data[key] = data[key].filter(r => r !== null);
+    });
+    return data;
+}
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function randomizeMealPlan() {
+    const data = getRecipeData();
+    if (!data) return;
+
+    const plan = { breakfast: [], lunch: [], dinner: [] };
+    const allRecipes = data.all || [];
+
+    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+        let pool = data[meal] || [];
+
+        // Fall back to all recipes if category pool is too small
+        if (pool.length < SLOTS_PER_MEAL) {
+            pool = allRecipes.map(r => ({ slug: r.slug, title: r.title }));
+        }
+
+        const picked = shuffle(pool).slice(0, SLOTS_PER_MEAL);
+        plan[meal] = picked.map(r => ({ slug: r.slug, title: r.title }));
+    });
+
+    saveMealPlan(plan);
+    renderMealPlan();
+}
+
 function filterMealPlanRecipes(query) {
     const items = document.querySelectorAll('.mealplan-recipe-item');
     const q = query.toLowerCase();
     items.forEach(item => {
         const title = item.dataset.title.toLowerCase();
-        item.style.display = title.includes(q) ? '' : 'none';
+        const category = item.dataset.category.toLowerCase();
+        item.style.display = (title.includes(q) || category.includes(q)) ? '' : 'none';
     });
 }
 
@@ -135,9 +199,9 @@ document.addEventListener('visibilitychange', async () => {
     }
 });
 
-// Hide wake lock toggle if browser doesn't support it
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('mealplan-body')) {
+    if (document.getElementById('breakfast-slots')) {
         renderMealPlan();
     }
     const wakeToggle = document.getElementById('wake-lock-toggle');
