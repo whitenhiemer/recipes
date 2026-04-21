@@ -2,21 +2,24 @@ package handler
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
 
 	"github.com/whitenhiemer/recipe-site/internal/config"
 	"github.com/whitenhiemer/recipe-site/internal/recipe"
+	"github.com/whitenhiemer/recipe-site/internal/store"
 )
 
 type Server struct {
 	idx       *recipe.Index
 	cfg       *config.Config
+	db        *store.DB
 	templates map[string]*template.Template
 }
 
-func Register(mux *http.ServeMux, idx *recipe.Index, cfg *config.Config) {
-	s := &Server{idx: idx, cfg: cfg}
+func Register(mux *http.ServeMux, idx *recipe.Index, cfg *config.Config, db *store.DB) {
+	s := &Server{idx: idx, cfg: cfg, db: db}
 	s.loadTemplates()
 
 	mux.HandleFunc("GET /", s.handleHome)
@@ -62,4 +65,14 @@ func (s *Server) render(w http.ResponseWriter, page string, data any) {
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func (s *Server) rebuildIndex() error {
+	rows, err := s.db.GetAllRecipes()
+	if err != nil {
+		return err
+	}
+	s.idx.Rebuild(store.RowsToRecipes(rows))
+	log.Printf("index rebuilt: %d recipes", len(rows))
+	return nil
 }

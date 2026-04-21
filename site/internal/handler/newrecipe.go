@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/whitenhiemer/recipe-site/internal/recipe"
+	"github.com/whitenhiemer/recipe-site/internal/store"
 )
 
 var slugRegex = regexp.MustCompile(`[^a-z0-9]+`)
@@ -20,9 +25,10 @@ func toSlug(title string) string {
 }
 
 func (s *Server) handleNewRecipe(w http.ResponseWriter, r *http.Request) {
+	cats, _ := s.db.GetAllCategories()
 	data := map[string]interface{}{
 		"Title":      "New Recipe",
-		"Categories": s.idx.GetAllCategories(),
+		"Categories": cats,
 	}
 	s.render(w, "new", data)
 }
@@ -52,27 +58,49 @@ func (s *Server) handleCreateRecipeAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	category := toSlug(req.Category)
-	dir := filepath.Join(s.cfg.RecipesDir, category)
 
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		http.Error(w, "failed to create category directory", http.StatusInternalServerError)
+	exists, err := s.db.RecipeExists(category, slug)
+	if err != nil {
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-
-	filePath := filepath.Join(dir, slug+".md")
-
-	if _, err := os.Stat(filePath); err == nil {
+	if exists {
 		http.Error(w, "a recipe with this name already exists in this category", http.StatusConflict)
 		return
 	}
 
-	if err := os.WriteFile(filePath, []byte(req.Markdown), 0644); err != nil {
-		http.Error(w, "failed to write recipe file", http.StatusInternalServerError)
+	parsed, err := recipe.ParseMarkdown([]byte(req.Markdown), slug, category)
+	if err != nil {
+		http.Error(w, "failed to parse markdown", http.StatusBadRequest)
 		return
 	}
 
-	if err := s.idx.Reload(s.cfg.RecipesDir); err != nil {
-		http.Error(w, "recipe saved but index reload failed", http.StatusInternalServerError)
+	now := time.Now()
+	row := &store.RecipeRow{
+		Slug:         slug,
+		Title:        parsed.Title,
+		Category:     category,
+		Image:        parsed.Image,
+		PrepTime:     parsed.PrepTime,
+		CookTime:     parsed.CookTime,
+		Servings:     parsed.Servings,
+		Tags:         parsed.Tags,
+		Ingredients:  toIngredientRows(parsed.Ingredients),
+		Instructions: parsed.Instructions,
+		Notes:        parsed.Notes,
+		Markdown:     req.Markdown,
+		HTMLContent:  parsed.HTMLContent,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	if _, err := s.db.InsertRecipe(row); err != nil {
+		http.Error(w, "failed to save recipe", http.StatusInternalServerError)
+		return
+	}
+
+	if err := s.rebuildIndex(); err != nil {
+		http.Error(w, "recipe saved but index rebuild failed", http.StatusInternalServerError)
 		return
 	}
 
@@ -83,6 +111,19 @@ func (s *Server) handleCreateRecipeAPI(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func toIngredientRows(ings []recipe.Ingredient) []store.IngredientRow {
+	rows := make([]store.IngredientRow, len(ings))
+	for i, ing := range ings {
+		rows[i] = store.IngredientRow{
+			Raw:      ing.Raw,
+			Name:     ing.Name,
+			Quantity: ing.Quantity,
+			Unit:     ing.Unit,
+		}
+	}
+	return rows
+}
+
 var allowedImageTypes = map[string]string{
 	"image/jpeg": ".jpg",
 	"image/png":  ".png",
@@ -90,7 +131,7 @@ var allowedImageTypes = map[string]string{
 }
 
 func (s *Server) handleImageUpload(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // 10MB max
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 
 	file, header, err := r.FormFile("image")
 	if err != nil {
@@ -119,15 +160,14 @@ func (s *Server) handleImageUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dst, err := os.Create(filepath.Join(imgDir, filename))
-	if err != nil {
-		http.Error(w, "failed to save image", http.StatusInternalServerError)
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, file); err != nil {
+		http.Error(w, "failed to read image", http.StatusInternalServerError)
 		return
 	}
-	defer dst.Close()
 
-	if _, err := io.Copy(dst, file); err != nil {
-		http.Error(w, "failed to write image", http.StatusInternalServerError)
+	if err := os.WriteFile(filepath.Join(imgDir, filename), buf.Bytes(), 0644); err != nil {
+		http.Error(w, "failed to save image", http.StatusInternalServerError)
 		return
 	}
 

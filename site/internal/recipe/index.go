@@ -23,6 +23,12 @@ func NewIndex(recipes []*Recipe) *Index {
 	return idx
 }
 
+func (idx *Index) Rebuild(recipes []*Recipe) {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+	idx.build(recipes)
+}
+
 func (idx *Index) build(recipes []*Recipe) {
 	idx.Recipes = recipes
 	idx.BySlug = make(map[string]*Recipe)

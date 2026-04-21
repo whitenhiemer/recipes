@@ -73,21 +73,28 @@ func ParseRecipeFile(path string, root string) (*Recipe, error) {
 		category = dir
 	}
 
+	r, err := ParseMarkdown(data, slug, category)
+	if err != nil {
+		return nil, err
+	}
+	r.FilePath = rel
+	r.ModTime = info.ModTime()
+	return r, nil
+}
+
+func ParseMarkdown(data []byte, slug, category string) (*Recipe, error) {
 	md := goldmark.New(goldmark.WithExtensions(meta.Meta))
 	ctx := parser.NewContext()
-	source := data
 
 	var htmlBuf bytes.Buffer
-	if err := md.Convert(source, &htmlBuf, parser.WithContext(ctx)); err != nil {
+	if err := md.Convert(data, &htmlBuf, parser.WithContext(ctx)); err != nil {
 		return nil, err
 	}
 
 	r := &Recipe{
 		Slug:        slug,
 		Category:    category,
-		FilePath:    rel,
 		HTMLContent: htmlBuf.String(),
-		ModTime:     info.ModTime(),
 	}
 
 	metaData := meta.Get(ctx)
@@ -106,10 +113,20 @@ func ParseRecipeFile(path string, root string) (*Recipe, error) {
 			r.Image = s
 		}
 	}
+	if r.Tags == nil {
+		r.Tags = []string{}
+	}
 
-	reader := text.NewReader(source)
+	reader := text.NewReader(data)
 	doc := md.Parser().Parse(reader, parser.WithContext(parser.NewContext()))
-	parseAST(doc, source, r)
+	parseAST(doc, data, r)
+
+	if r.Instructions == nil {
+		r.Instructions = []string{}
+	}
+	if r.Notes == nil {
+		r.Notes = []string{}
+	}
 
 	return r, nil
 }

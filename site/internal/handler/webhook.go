@@ -56,11 +56,18 @@ func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("webhook: git pull: %s", output)
 
-		if err := s.idx.Reload(s.cfg.RecipesDir); err != nil {
-			log.Printf("webhook: index reload failed: %v", err)
+		imported, err := s.db.ImportFromMarkdown(s.cfg.RecipesDir)
+		if err != nil {
+			log.Printf("webhook: import failed: %v", err)
 			return
 		}
-		log.Println("webhook: index reloaded successfully")
+		log.Printf("webhook: imported/updated %d recipes from markdown", imported)
+
+		if err := s.rebuildIndex(); err != nil {
+			log.Printf("webhook: index rebuild failed: %v", err)
+			return
+		}
+		log.Println("webhook: index rebuilt successfully")
 	}()
 
 	w.WriteHeader(http.StatusOK)

@@ -3,92 +3,168 @@
 <section>
     <h2>New Recipe</h2>
 
-    <form id="recipe-wizard" class="recipe-wizard">
-        <!-- Step 1: Basics -->
-        <fieldset class="wizard-step" data-step="1">
-            <legend>Step 1: Basics</legend>
-            <label for="title">Recipe Name</label>
-            <input type="text" id="title" name="title" placeholder="e.g. Smoked Brisket" required>
+    <div class="new-recipe-tabs">
+        <button class="tab-btn active" onclick="switchTab('wizard')">Build Recipe</button>
+        <button class="tab-btn" onclick="switchTab('upload')">Upload Markdown</button>
+    </div>
 
-            <label for="category">Category</label>
-            <select id="category" name="category" required>
+    <!-- Tab 1: Wizard -->
+    <div id="tab-wizard">
+        <form id="recipe-wizard" class="recipe-wizard">
+            <!-- Step 1: Basics -->
+            <fieldset class="wizard-step" data-step="1">
+                <legend>Step 1: Basics</legend>
+                <label for="title">Recipe Name</label>
+                <input type="text" id="title" name="title" placeholder="e.g. Smoked Brisket" required>
+
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                    <option value="">Select a category...</option>
+                    {{range .Categories}}
+                    <option value="{{.}}">{{.}}</option>
+                    {{end}}
+                </select>
+
+                <div class="wizard-row">
+                    <div>
+                        <label for="prep_time">Prep Time</label>
+                        <input type="text" id="prep_time" name="prep_time" placeholder="15 min">
+                    </div>
+                    <div>
+                        <label for="cook_time">Cook Time</label>
+                        <input type="text" id="cook_time" name="cook_time" placeholder="30 min">
+                    </div>
+                    <div>
+                        <label for="servings">Servings</label>
+                        <input type="text" id="servings" name="servings" placeholder="4">
+                    </div>
+                </div>
+
+                <label for="tags">Tags (comma-separated)</label>
+                <input type="text" id="tags" name="tags" placeholder="quick, chicken, comfort-food">
+
+                <label for="recipe-image">Photo (optional)</label>
+                <div class="image-upload-area" id="image-upload-area">
+                    <input type="file" id="recipe-image" accept="image/jpeg,image/png,image/webp" onchange="handleImageSelect(this)">
+                    <img id="image-preview" class="image-preview" style="display:none">
+                    <button type="button" id="image-remove" class="secondary image-remove-btn" style="display:none" onclick="removeImage()">Remove</button>
+                </div>
+
+                <div class="wizard-nav">
+                    <span></span>
+                    <button type="button" onclick="wizardNext()">Next</button>
+                </div>
+            </fieldset>
+
+            <!-- Step 2: Ingredients -->
+            <fieldset class="wizard-step" data-step="2" style="display:none">
+                <legend>Step 2: Ingredients</legend>
+                <p class="wizard-hint">One ingredient per line (e.g. "1 cup flour")</p>
+                <textarea id="ingredients" name="ingredients" rows="12" placeholder="1 cup flour&#10;2 tbsp butter&#10;1/2 tsp salt"></textarea>
+
+                <div class="wizard-nav">
+                    <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
+                    <button type="button" onclick="wizardNext()">Next</button>
+                </div>
+            </fieldset>
+
+            <!-- Step 3: Instructions -->
+            <fieldset class="wizard-step" data-step="3" style="display:none">
+                <legend>Step 3: Instructions</legend>
+                <p class="wizard-hint">One step per line. Numbering is added automatically.</p>
+                <textarea id="instructions" name="instructions" rows="12" placeholder="Preheat oven to 350F&#10;Mix dry ingredients together&#10;Add wet ingredients and stir"></textarea>
+
+                <div class="wizard-nav">
+                    <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
+                    <button type="button" onclick="wizardNext()">Next</button>
+                </div>
+            </fieldset>
+
+            <!-- Step 4: Notes & Review -->
+            <fieldset class="wizard-step" data-step="4" style="display:none">
+                <legend>Step 4: Notes</legend>
+                <p class="wizard-hint">Tips, variations, or substitutions. One per line (optional).</p>
+                <textarea id="notes" name="notes" rows="6" placeholder="Use room temperature butter for best results&#10;Can substitute milk for cream"></textarea>
+
+                <hr>
+                <h3>Preview</h3>
+                <pre id="recipe-preview" class="recipe-preview"></pre>
+
+                <div class="wizard-nav">
+                    <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
+                    <button type="submit">Save Recipe</button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+
+    <!-- Tab 2: Markdown Upload -->
+    <div id="tab-upload" style="display:none">
+        <form id="upload-form">
+            <label for="upload-category">Category</label>
+            <select id="upload-category" required>
                 <option value="">Select a category...</option>
                 {{range .Categories}}
                 <option value="{{.}}">{{.}}</option>
                 {{end}}
             </select>
 
-            <div class="wizard-row">
-                <div>
-                    <label for="prep_time">Prep Time</label>
-                    <input type="text" id="prep_time" name="prep_time" placeholder="15 min">
-                </div>
-                <div>
-                    <label for="cook_time">Cook Time</label>
-                    <input type="text" id="cook_time" name="cook_time" placeholder="30 min">
-                </div>
-                <div>
-                    <label for="servings">Servings</label>
-                    <input type="text" id="servings" name="servings" placeholder="4">
-                </div>
-            </div>
+            <label for="md-file">Markdown File (.md)</label>
+            <input type="file" id="md-file" accept=".md,text/markdown,text/plain" onchange="handleMdFileSelect(this)">
 
-            <label for="tags">Tags (comma-separated)</label>
-            <input type="text" id="tags" name="tags" placeholder="quick, chicken, comfort-food">
+            <details class="md-help">
+                <summary>Markdown Help</summary>
+                <div class="md-help-content">
+                    <p>Recipes use standard Markdown with optional YAML frontmatter. Here's the format:</p>
+                    <pre class="recipe-preview">---
+tags: [comfort-food, quick]
+image: my-recipe.jpg
+---
+# Recipe Name
 
-            <label for="recipe-image">Photo (optional)</label>
-            <div class="image-upload-area" id="image-upload-area">
-                <input type="file" id="recipe-image" accept="image/jpeg,image/png,image/webp" onchange="handleImageSelect(this)">
-                <img id="image-preview" class="image-preview" style="display:none">
-                <button type="button" id="image-remove" class="secondary image-remove-btn" style="display:none" onclick="removeImage()">Remove</button>
-            </div>
+**Prep Time:** 15 min | **Cook Time:** 30 min | **Servings:** 4
+
+## Ingredients
+
+- 1 cup flour
+- 2 tbsp butter
+- 1/2 tsp salt
+
+## Instructions
+
+1. Preheat oven to 350F
+2. Mix dry ingredients
+3. Add wet ingredients and stir
+
+## Notes
+
+- Tips or substitutions here</pre>
+                    <h4>Quick Reference</h4>
+                    <table>
+                        <thead><tr><th>Syntax</th><th>Result</th></tr></thead>
+                        <tbody>
+                            <tr><td><code># Heading</code></td><td>Recipe title (use only one)</td></tr>
+                            <tr><td><code>## Section</code></td><td>Section header (Ingredients, Instructions, Notes)</td></tr>
+                            <tr><td><code>- item</code></td><td>Bullet list (for ingredients and notes)</td></tr>
+                            <tr><td><code>1. step</code></td><td>Numbered list (for instructions)</td></tr>
+                            <tr><td><code>**bold**</code></td><td>Bold text</td></tr>
+                            <tr><td><code>*italic*</code></td><td>Italic text</td></tr>
+                            <tr><td><code>---</code></td><td>Frontmatter delimiters (tags and image)</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The <code>tags</code> and <code>image</code> frontmatter fields are optional. Category is set by the dropdown above, not in the file.</p>
+                </div>
+            </details>
+
+            <label for="md-editor">Content Preview</label>
+            <textarea id="md-editor" rows="20" placeholder="Select a .md file above or paste your recipe markdown here..."></textarea>
 
             <div class="wizard-nav">
                 <span></span>
-                <button type="button" onclick="wizardNext()">Next</button>
+                <button type="submit">Upload Recipe</button>
             </div>
-        </fieldset>
-
-        <!-- Step 2: Ingredients -->
-        <fieldset class="wizard-step" data-step="2" style="display:none">
-            <legend>Step 2: Ingredients</legend>
-            <p class="wizard-hint">One ingredient per line (e.g. "1 cup flour")</p>
-            <textarea id="ingredients" name="ingredients" rows="12" placeholder="1 cup flour&#10;2 tbsp butter&#10;1/2 tsp salt"></textarea>
-
-            <div class="wizard-nav">
-                <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
-                <button type="button" onclick="wizardNext()">Next</button>
-            </div>
-        </fieldset>
-
-        <!-- Step 3: Instructions -->
-        <fieldset class="wizard-step" data-step="3" style="display:none">
-            <legend>Step 3: Instructions</legend>
-            <p class="wizard-hint">One step per line. Numbering is added automatically.</p>
-            <textarea id="instructions" name="instructions" rows="12" placeholder="Preheat oven to 350F&#10;Mix dry ingredients together&#10;Add wet ingredients and stir"></textarea>
-
-            <div class="wizard-nav">
-                <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
-                <button type="button" onclick="wizardNext()">Next</button>
-            </div>
-        </fieldset>
-
-        <!-- Step 4: Notes & Review -->
-        <fieldset class="wizard-step" data-step="4" style="display:none">
-            <legend>Step 4: Notes</legend>
-            <p class="wizard-hint">Tips, variations, or substitutions. One per line (optional).</p>
-            <textarea id="notes" name="notes" rows="6" placeholder="Use room temperature butter for best results&#10;Can substitute milk for cream"></textarea>
-
-            <hr>
-            <h3>Preview</h3>
-            <pre id="recipe-preview" class="recipe-preview"></pre>
-
-            <div class="wizard-nav">
-                <button type="button" class="secondary" onclick="wizardPrev()">Back</button>
-                <button type="submit">Save Recipe</button>
-            </div>
-        </fieldset>
-    </form>
+        </form>
+    </div>
 
     <div id="wizard-result" style="display:none">
         <p><span id="wizard-success-msg"></span> <a id="wizard-view-link" href="/">View it here</a>.</p>
@@ -103,6 +179,13 @@
 let currentStep = 1;
 const totalSteps = 4;
 let uploadedImageFilename = '';
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-wizard').style.display = tab === 'wizard' ? '' : 'none';
+    document.getElementById('tab-upload').style.display = tab === 'upload' ? '' : 'none';
+    event.target.classList.add('active');
+}
 
 function wizardNext() {
     if (currentStep === 1) {
@@ -244,13 +327,74 @@ document.getElementById('recipe-wizard').addEventListener('submit', async functi
 
         if (resp.ok) {
             const result = await resp.json();
-            document.getElementById('recipe-wizard').style.display = 'none';
+            document.getElementById('tab-wizard').style.display = 'none';
             document.getElementById('wizard-result').style.display = '';
             document.getElementById('wizard-success-msg').textContent = 'Recipe saved!';
             document.getElementById('wizard-view-link').href = '/recipes/' + encodeURIComponent(result.category) + '/' + encodeURIComponent(result.slug);
         } else {
             const err = await resp.text();
             alert('Error saving recipe: ' + err);
+        }
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+});
+
+// Markdown upload tab
+function handleMdFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('md-editor').value = e.target.result;
+    };
+    reader.readAsText(file);
+}
+
+function extractTitleFromMarkdown(md) {
+    const match = md.match(/^#\s+(.+)$/m);
+    return match ? match[1].trim() : '';
+}
+
+document.getElementById('upload-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const category = document.getElementById('upload-category').value;
+    const markdown = document.getElementById('md-editor').value.trim();
+
+    if (!category) {
+        document.getElementById('upload-category').focus();
+        return;
+    }
+    if (!markdown) {
+        document.getElementById('md-editor').focus();
+        return;
+    }
+
+    const title = extractTitleFromMarkdown(markdown);
+    if (!title) {
+        alert('Could not find a recipe title. Make sure your markdown starts with "# Recipe Name".');
+        return;
+    }
+
+    try {
+        const resp = await fetch('/api/recipe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, category: category, markdown: markdown })
+        });
+
+        if (resp.ok) {
+            const result = await resp.json();
+            document.getElementById('tab-upload').style.display = 'none';
+            document.querySelectorAll('.new-recipe-tabs').forEach(el => el.style.display = 'none');
+            document.getElementById('wizard-result').style.display = '';
+            document.getElementById('wizard-success-msg').textContent = 'Recipe uploaded!';
+            document.getElementById('wizard-view-link').href = '/recipes/' + encodeURIComponent(result.category) + '/' + encodeURIComponent(result.slug);
+        } else {
+            const err = await resp.text();
+            alert('Error uploading recipe: ' + err);
         }
     } catch (err) {
         alert('Error: ' + err.message);

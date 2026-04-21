@@ -517,6 +517,66 @@ nav ul li a {
     }
 }
 
+/* New Recipe Tabs */
+.new-recipe-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+    padding: 0.5rem 1.25rem;
+    border: 2px solid var(--pico-muted-border-color);
+    border-radius: 0.5rem 0.5rem 0 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    min-height: 44px;
+}
+
+.tab-btn.active {
+    border-color: var(--pico-primary-background);
+    border-bottom-color: transparent;
+    background: var(--pico-card-background-color);
+    font-weight: bold;
+}
+
+/* Markdown Help */
+.md-help {
+    margin: 1rem 0;
+}
+
+.md-help summary {
+    cursor: pointer;
+    font-weight: bold;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.md-help-content {
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: var(--pico-card-background-color);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.md-help-content h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.md-help-content table {
+    font-size: 0.85rem;
+}
+
+.md-help-content pre {
+    font-size: 0.8rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
 @media print {
     nav, footer, header, .shopping-actions, .mealplan-actions, .mealplan-sidebar,
     .search-bar, .category-tabs, .wake-lock-toggle {

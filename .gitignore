@@ -2,3 +2,8 @@
 *.swp
 *.swo
 *~
+
+# SQLite database files
+*.db
+*.db-wal
+*.db-shm

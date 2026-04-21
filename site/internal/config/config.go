@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Addr          string
 	RecipesDir    string
+	DBPath        string
 	WebhookSecret string
 }
 
@@ -18,6 +19,7 @@ func Load() *Config {
 
 	flag.StringVar(&cfg.Addr, "addr", ":8080", "listen address")
 	flag.StringVar(&cfg.RecipesDir, "recipes", "..", "path to recipes directory")
+	flag.StringVar(&cfg.DBPath, "db", "recipes.db", "path to SQLite database file")
 
 	secretFile := ""
 	flag.StringVar(&secretFile, "webhook-secret-file", "", "path to file containing webhook secret")
