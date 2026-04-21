@@ -4,16 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}} - Recipe Book</title>
+    <title>{{.Title}} - House Woodward Gourmand</title>
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="/static/js/htmx.min.js" defer></script>
 </head>
 <body>
+    <header class="container site-header">
+        <a href="/">
+            <img src="/static/img/logo.png" alt="House Woodward" class="site-logo">
+        </a>
+        <h1 class="site-title"><a href="/">House Woodward Gourmand</a></h1>
+    </header>
     <nav class="container">
-        <ul>
-            <li><strong><a href="/">Recipe Book</a></strong></li>
-        </ul>
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/tags">Tags</a></li>
@@ -25,7 +28,7 @@
         {{template "content" .}}
     </main>
     <footer class="container">
-        <small>Recipe Book</small>
+        <small>House Woodward Gourmand</small>
     </footer>
     <script src="/static/js/app.js" defer></script>
 </body>

@@ -108,9 +108,40 @@ function copyShoppingList() {
     });
 }
 
-// Initialize meal plan on page load
+// Wake Lock - keeps screen on while cooking
+let wakeLock = null;
+
+async function toggleWakeLock(enabled) {
+    if (!('wakeLock' in navigator)) return;
+    if (enabled) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => {
+                const toggle = document.getElementById('wake-lock-toggle');
+                if (toggle) toggle.checked = false;
+            });
+        } catch (e) {}
+    } else if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+    }
+}
+
+// Re-acquire wake lock when returning to the tab
+document.addEventListener('visibilitychange', async () => {
+    const toggle = document.getElementById('wake-lock-toggle');
+    if (toggle && toggle.checked && document.visibilityState === 'visible') {
+        toggleWakeLock(true);
+    }
+});
+
+// Hide wake lock toggle if browser doesn't support it
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('mealplan-body')) {
         renderMealPlan();
+    }
+    const wakeToggle = document.getElementById('wake-lock-toggle');
+    if (wakeToggle && !('wakeLock' in navigator)) {
+        wakeToggle.parentElement.style.display = 'none';
     }
 });

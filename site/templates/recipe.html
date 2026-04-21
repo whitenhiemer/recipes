@@ -2,6 +2,10 @@
 {{define "content"}}
 <article>
     <a href="/">&larr; Back to recipes</a>
+    <label class="wake-lock-toggle">
+        <input type="checkbox" id="wake-lock-toggle" onchange="toggleWakeLock(this.checked)">
+        Keep screen on
+    </label>
     <div class="recipe-detail">
         {{.Content}}
     </div>
