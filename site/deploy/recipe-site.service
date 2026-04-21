@@ -1,5 +1,5 @@
 [Unit]
-Description=Recipe Site
+Description=Recipe Site - House Woodward Gourmand
 After=network.target
 
 [Service]
@@ -10,6 +10,7 @@ WorkingDirectory=/opt/recipe-site/repo/site
 ExecStart=/opt/recipe-site/recipe-site \
     -addr=127.0.0.1:8080 \
     -recipes=/opt/recipe-site/repo \
+    -db=/opt/recipe-site/data/recipes.db \
     -webhook-secret-file=/opt/recipe-site/.webhook-secret
 Restart=always
 RestartSec=5
@@ -17,7 +18,7 @@ RestartSec=5
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/recipe-site/repo
+ReadWritePaths=/opt/recipe-site
 PrivateTmp=true
 ProtectKernelTunables=true
 ProtectControlGroups=true

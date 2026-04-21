@@ -20,11 +20,19 @@ recipes/
 └── site/               # Go web application
     ├── main.go
     ├── Makefile
-    ├── internal/       # Go packages (config, recipe parser, handlers)
+    ├── internal/       # Go packages (config, recipe parser, store, handlers)
     ├── templates/      # HTML templates (layout, home, recipe, etc.)
     ├── static/         # CSS, JS, images
-    └── deploy/         # systemd, nginx, setup scripts
+    └── deploy/         # Proxmox deploy scripts, systemd, nginx
 ```
+
+## Storage
+
+Recipes are stored in a **SQLite database** (WAL mode). On startup, the app imports any markdown recipe files found in the repo into the database. New recipes created through the web UI are stored directly in the database.
+
+**Backups:** A daily cron job runs `sqlite3 .backup` at 3 AM with 14-day retention. The database file lives at `/opt/recipe-site/data/recipes.db` on the deployed container.
+
+**Migration path:** The schema is PostgreSQL-compatible. When the time comes, swap `modernc.org/sqlite` for `lib/pq` and update the connection string.
 
 ## Adding a Recipe
 
@@ -71,132 +79,113 @@ make run
 
 ## Deploying to Proxmox LXC
 
-### 1. Create the LXC Container
+### Automated Deploy (Recommended)
 
-From the Proxmox web UI or CLI, create a new container:
+The deploy scripts follow the [community-scripts.org](https://community-scripts.org) convention. From your Proxmox host:
 
 ```bash
-# From the Proxmox host
+# Copy the deploy scripts to your Proxmox host, then run:
+bash ct-recipe-site.sh
+```
+
+This launches a whiptail wizard that:
+1. Prompts for container ID, resources, and network settings (or uses defaults)
+2. Creates the LXC container with Debian 12
+3. Installs all dependencies (nginx, Go, SQLite)
+4. Clones the repo and builds the Go binary
+5. Configures systemd, nginx reverse proxy, and database backups
+6. Generates a webhook secret
+
+The scripts are in `site/deploy/`:
+- `ct-recipe-site.sh` -- runs on Proxmox host, creates the LXC
+- `install-recipe-site.sh` -- runs inside the container, installs everything
+
+### Manual Deploy
+
+If you prefer to set things up manually:
+
+#### 1. Create the LXC Container
+
+```bash
 pct create <CTID> local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst \
   --hostname recipe-site \
-  --memory 256 \
-  --swap 256 \
-  --rootfs local-lvm:2 \
+  --memory 512 \
+  --swap 512 \
+  --rootfs local-lvm:4 \
   --cores 1 \
   --net0 name=eth0,bridge=vmbr0,ip=dhcp \
   --unprivileged 1 \
+  --features nesting=1 \
   --start 1
 ```
 
-Adjust `CTID`, storage, and network bridge to match your environment. 256MB RAM and 2GB disk is sufficient.
-
-### 2. Initial Setup Inside the Container
-
-Attach to the container and install dependencies:
+#### 2. Install Dependencies
 
 ```bash
 pct enter <CTID>
+apt-get update && apt-get install -y nginx git golang-go sqlite3
+```
 
-apt-get update && apt-get install -y nginx git golang-go
+#### 3. Clone, Build, and Configure
 
-# Create a service user
+```bash
 useradd -r -s /bin/false -m -d /opt/recipe-site recipe-site
-mkdir -p /opt/recipe-site
-chown recipe-site:recipe-site /opt/recipe-site
-```
-
-### 3. Clone and Build
-
-```bash
-# Clone the repo (use HTTPS if SSH keys aren't set up in the container)
+mkdir -p /opt/recipe-site/data
 git clone https://github.com/whitenhiemer/recipes.git /opt/recipe-site/repo
-
-# Build the Go binary
-cd /opt/recipe-site/repo/site
-go build -o /opt/recipe-site/recipe-site .
-
-# Set ownership
-chown recipe-site:recipe-site /opt/recipe-site/recipe-site
-```
-
-### 4. Create the Webhook Secret
-
-This is used to verify GitHub webhook payloads:
-
-```bash
+cd /opt/recipe-site/repo/site && go build -o /opt/recipe-site/recipe-site .
+chown -R recipe-site:recipe-site /opt/recipe-site
 openssl rand -hex 32 > /opt/recipe-site/.webhook-secret
 chmod 600 /opt/recipe-site/.webhook-secret
 chown recipe-site:recipe-site /opt/recipe-site/.webhook-secret
 ```
 
-### 5. Install the systemd Service
+#### 4. Install Service and nginx
 
 ```bash
 cp /opt/recipe-site/repo/site/deploy/recipe-site.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable --now recipe-site
+systemctl daemon-reload && systemctl enable --now recipe-site
 
-# Verify it's running
-systemctl status recipe-site
-curl -s http://127.0.0.1:8080/ | head -5
-```
-
-The service runs the Go binary on `127.0.0.1:8080` with security hardening (NoNewPrivileges, ProtectSystem=strict, read-only filesystem except the repo directory).
-
-### 6. Configure nginx Reverse Proxy
-
-```bash
-# Edit the server_name in the config first
-vim /opt/recipe-site/repo/site/deploy/nginx.conf
-# Change "recipes.yourdomain.com" to your actual domain or the container's IP
-
+# Edit server_name in nginx.conf, then:
 cp /opt/recipe-site/repo/site/deploy/nginx.conf /etc/nginx/sites-available/recipe-site
 ln -sf /etc/nginx/sites-available/recipe-site /etc/nginx/sites-enabled/
-rm -f /etc/nginx/sites-enabled/default
-systemctl restart nginx
+rm -f /etc/nginx/sites-enabled/default && systemctl restart nginx
 ```
 
-The site should now be accessible at `http://<container-ip>`.
-
-### 7. TLS with Let's Encrypt (Optional)
-
-If the container is publicly accessible with a domain name:
+#### 5. TLS (Optional)
 
 ```bash
 apt-get install -y certbot python3-certbot-nginx
 certbot --nginx -d recipes.yourdomain.com
 ```
 
-### 8. Configure GitHub Webhook for Auto-Reload
+### GitHub Webhook for Auto-Reload
 
-1. Go to the repo settings on GitHub: Settings > Webhooks > Add webhook
-2. Set the payload URL to `https://recipes.yourdomain.com/webhook`
-3. Set the content type to `application/json`
-4. Set the secret to the contents of `/opt/recipe-site/.webhook-secret`
-5. Select "Just the push event"
+1. Go to repo Settings > Webhooks > Add webhook
+2. Payload URL: `https://recipes.yourdomain.com/webhook`
+3. Content type: `application/json`
+4. Secret: contents of `/opt/recipe-site/.webhook-secret`
+5. Events: "Just the push event"
 
-When you push new recipes, the webhook triggers a `git pull` and index reload -- no restart needed.
+On push, the webhook triggers `git pull`, reimports markdown into the DB, and rebuilds the index.
 
-### 9. Manual Deploys (Code Changes)
-
-For changes to the Go code, templates, or static assets, run the deploy script:
+### Manual Code Deploys
 
 ```bash
 /opt/recipe-site/repo/site/deploy/deploy.sh
 ```
-
-This pulls the latest code, rebuilds the binary, and restarts the service.
 
 ### Container Summary
 
 | Setting | Value |
 |---------|-------|
 | OS | Debian 12 |
-| RAM | 256 MB |
-| Disk | 2 GB |
+| RAM | 512 MB |
+| Disk | 4 GB |
 | CPU | 1 core |
-| Stack | nginx -> Go binary on :8080 |
+| Stack | nginx -> Go binary on :8080 -> SQLite |
 | Repo | `/opt/recipe-site/repo` |
+| Database | `/opt/recipe-site/data/recipes.db` |
+| Backups | `/opt/recipe-site/data/backups/` (daily, 14-day retention) |
 | Binary | `/opt/recipe-site/recipe-site` |
 | Service | `recipe-site.service` |
 | Webhook secret | `/opt/recipe-site/.webhook-secret` |
