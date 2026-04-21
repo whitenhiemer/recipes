@@ -43,6 +43,18 @@ Recipes are stored in a **SQLite database** (WAL mode). On startup, the app impo
 
 You can also add recipes directly from the website using the "+ New Recipe" button on the home page.
 
+## Features
+
+- **Search & browse** -- live search, category tabs, tag filtering
+- **Meal planning** -- drag recipes into a weekly meal plan (localStorage)
+- **Shopping list** -- auto-generated from meal plan recipes, grouped by grocery store department
+- **Pantry staples** -- common items (salt, oil, flour, spices) flagged and excluded from estimated total
+- **Pantry & fridge inventory** -- track what you have on hand; on-hand items auto-detected on the shopping list via fuzzy matching
+- **Print-friendly** -- branded single-page shopping list (3-column, compact layout with logo)
+- **Recipe creation** -- step-by-step wizard or markdown file upload with syntax guide
+- **Kitchen mode** -- screen wake lock keeps your phone awake while cooking
+- **Mobile-first** -- responsive design with touch-friendly controls
+
 ### Recipe Format
 
 ```markdown

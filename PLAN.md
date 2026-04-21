@@ -46,6 +46,7 @@ GET  /mealplan                      Meal plan builder (JS + localStorage)
 POST /api/shopping-list             JSON: {slugs: [...]} -> aggregated shopping list
 GET  /shopping-list?slugs=a,b,c     Server-rendered shopping list
 GET  /new                           Recipe creation wizard
+GET  /pantry                        Pantry & fridge inventory (localStorage)
 POST /api/recipe                    Create recipe (JSON: title, category, markdown)
 POST /api/image                     Upload recipe image
 POST /webhook                       GitHub push webhook (HMAC-SHA256)
@@ -120,12 +121,19 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [x] Markdown file upload in wizard with syntax help guide
 - [x] Proxmox community-scripts style deploy (ct + install scripts)
 - [x] Database backup cron (daily, 14-day retention)
+- [x] Shopping list grouped by grocery store departments
+- [x] Pantry staples designation (salt, oil, flour, spices auto-excluded from total)
+- [x] Branded print layout with logo (single-page, 3-column, compact)
+- [x] Pantry & fridge inventory page (localStorage, add/remove/filter by location)
+- [x] On-hand item detection in shopping list (fuzzy match against pantry inventory)
 
 ### TODO
 
 - [ ] Deploy to Proxmox LXC container
 - [ ] Configure GitHub webhook for auto-reload
 - [ ] Set up TLS with Let's Encrypt
+- [ ] Acquire a domain name for the site
+- [ ] Google OAuth2 authentication (see Auth section below)
 - [ ] Add unit tests for parser, index, and store
 - [ ] Favorites (localStorage, filter view)
 - [ ] "I made this" log/notes per recipe (localStorage)
@@ -137,3 +145,123 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [ ] Recipe scaling (multiply ingredient quantities)
 - [ ] Recipe editing/deletion from the web UI
 - [ ] PostgreSQL migration (when needed)
+
+## Authentication (Google OAuth2)
+
+**Goal:** Public read access to all recipes. Write access (create, edit, delete) requires Google login from an allowlisted email.
+
+### Prerequisites
+
+- Domain name with TLS (Let's Encrypt) -- required for OAuth redirect URI
+- Google Cloud project with OAuth 2.0 credentials (client ID + secret)
+
+### Google Cloud Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a project (or use existing): "House Woodward Gourmand"
+3. APIs & Services > OAuth consent screen > External > configure app name, support email
+4. APIs & Services > Credentials > Create OAuth 2.0 Client ID
+   - Application type: Web application
+   - Authorized redirect URI: `https://recipes.yourdomain.com/auth/callback`
+5. Save the Client ID and Client Secret
+
+### New Routes
+
+```
+GET  /login              Redirect to Google OAuth consent screen
+GET  /auth/callback      Exchange auth code for token, create session, redirect to /
+GET  /logout             Clear session cookie, redirect to /
+```
+
+### New Package: `internal/auth/`
+
+```
+internal/auth/
+├── oauth.go             # Google OAuth2 config, login/callback/logout handlers
+├── session.go           # Session create/get/delete, cookie management
+└── middleware.go         # RequireAuth middleware for write routes
+```
+
+### Database Changes
+
+New `sessions` table:
+
+```sql
+CREATE TABLE sessions (
+    id TEXT PRIMARY KEY,           -- random 32-byte hex token
+    email TEXT NOT NULL,
+    created_at DATETIME NOT NULL,
+    expires_at DATETIME NOT NULL
+);
+CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+```
+
+Session cleanup: delete expired rows on each login or via periodic goroutine.
+
+### Config Changes
+
+New flags/env vars:
+
+```
+-google-client-id       or  GOOGLE_CLIENT_ID
+-google-client-secret   or  GOOGLE_CLIENT_SECRET
+-allowed-emails         or  ALLOWED_EMAILS       (comma-separated)
+-base-url               or  BASE_URL             (e.g. https://recipes.yourdomain.com)
+```
+
+Store OAuth client secret in a file (like webhook secret) to avoid CLI args in `ps` output:
+
+```
+-google-secret-file=/opt/recipe-site/.google-oauth-secret
+```
+
+### Auth Flow
+
+1. User clicks "Login" in nav (shown when not authenticated)
+2. `GET /login` redirects to Google with `state` parameter (CSRF token stored in cookie)
+3. Google redirects to `/auth/callback?code=...&state=...`
+4. Server exchanges code for token, fetches user info (email)
+5. If email is in allowlist: create session row in DB, set secure cookie, redirect to /
+6. If email is not in allowlist: show "not authorized" page
+7. Session cookie: `HttpOnly`, `Secure`, `SameSite=Lax`, 7-day expiry
+
+### Protected Routes
+
+Only these routes require auth -- everything else stays public:
+
+```
+GET  /new                RequireAuth
+POST /api/recipe         RequireAuth
+POST /api/image          RequireAuth
+POST /api/recipe/delete  RequireAuth (future)
+POST /api/recipe/edit    RequireAuth (future)
+```
+
+### UI Changes
+
+- Nav: show "Login" link when no session, show email + "Logout" when authenticated
+- "+ New Recipe" button: still visible to everyone, but clicking it redirects to /login if not authenticated
+- Recipe detail: show "Edit" / "Delete" buttons only when authenticated (future)
+
+### Dependencies
+
+```
+golang.org/x/oauth2        # OAuth2 client
+```
+
+No other external deps needed. Google's userinfo endpoint returns email directly.
+
+### Deploy Changes
+
+- Store Google OAuth credentials in `/opt/recipe-site/.google-oauth-secret`
+- Add `-google-client-id`, `-google-secret-file`, `-allowed-emails`, `-base-url` to systemd ExecStart
+- nginx must proxy the auth routes (already covered by `location /`)
+
+### Security Notes
+
+- CSRF protection via `state` parameter in OAuth flow (random token in cookie, verified on callback)
+- Session tokens are cryptographically random (32 bytes from crypto/rand)
+- Cookies are HttpOnly + Secure + SameSite=Lax
+- Email allowlist is checked server-side on every callback, not cached
+- Sessions stored in DB, not JWT -- can be revoked by deleting the row
+- No password storage, no password reset flow -- Google handles all credential management

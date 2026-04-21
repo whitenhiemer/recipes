@@ -1,0 +1,145 @@
+{{template "layout" .}}
+{{define "content"}}
+<section>
+    <h2>Pantry & Fridge</h2>
+    <p class="pantry-subtitle">Track what you have on hand. Items here will be flagged on your shopping list so you know what to skip.</p>
+
+    <div class="pantry-add">
+        <input type="text" id="pantry-input" placeholder="Add an item (e.g. butter, eggs, soy sauce)" onkeydown="if(event.key==='Enter')addPantryItem()">
+        <select id="pantry-location">
+            <option value="pantry">Pantry</option>
+            <option value="fridge">Fridge</option>
+            <option value="freezer">Freezer</option>
+        </select>
+        <button onclick="addPantryItem()">Add</button>
+    </div>
+
+    <div class="pantry-filters">
+        <button class="pantry-filter active" onclick="filterPantry('all', this)">All</button>
+        <button class="pantry-filter" onclick="filterPantry('pantry', this)">Pantry</button>
+        <button class="pantry-filter" onclick="filterPantry('fridge', this)">Fridge</button>
+        <button class="pantry-filter" onclick="filterPantry('freezer', this)">Freezer</button>
+    </div>
+
+    <div id="pantry-list" class="pantry-list"></div>
+
+    <div id="pantry-empty" class="pantry-empty" style="display:none">
+        <p>No items yet. Add what you have on hand above.</p>
+    </div>
+
+    <div class="pantry-actions">
+        <button class="secondary outline" onclick="clearPantry()">Clear All</button>
+        <span class="pantry-count" id="pantry-count"></span>
+    </div>
+</section>
+
+<script>
+const PANTRY_KEY = 'recipe-pantry-inventory';
+
+function getPantry() {
+    const data = localStorage.getItem(PANTRY_KEY);
+    return data ? JSON.parse(data) : [];
+}
+
+function savePantry(items) {
+    localStorage.setItem(PANTRY_KEY, JSON.stringify(items));
+}
+
+function addPantryItem() {
+    const input = document.getElementById('pantry-input');
+    const name = input.value.trim().toLowerCase();
+    if (!name) { input.focus(); return; }
+
+    const location = document.getElementById('pantry-location').value;
+    const items = getPantry();
+
+    const existing = items.find(i => i.name === name);
+    if (existing) {
+        existing.location = location;
+        existing.addedAt = new Date().toISOString();
+    } else {
+        items.push({ name, location, addedAt: new Date().toISOString() });
+    }
+
+    savePantry(items);
+    input.value = '';
+    input.focus();
+    renderPantry();
+}
+
+function removePantryItem(name) {
+    const items = getPantry().filter(i => i.name !== name);
+    savePantry(items);
+    renderPantry();
+}
+
+function clearPantry() {
+    if (!confirm('Remove all items from your pantry inventory?')) return;
+    localStorage.removeItem(PANTRY_KEY);
+    renderPantry();
+}
+
+function filterPantry(location, btn) {
+    document.querySelectorAll('.pantry-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.pantry-item').forEach(el => {
+        if (location === 'all' || el.getAttribute('data-location') === location) {
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+}
+
+const locationIcons = { pantry: '\u{1F3E0}', fridge: '\u{1F9CA}', freezer: '\u{1F976}' };
+
+function renderPantry() {
+    const items = getPantry();
+    const list = document.getElementById('pantry-list');
+    const empty = document.getElementById('pantry-empty');
+    const count = document.getElementById('pantry-count');
+
+    while (list.firstChild) list.removeChild(list.firstChild);
+
+    if (!items.length) {
+        empty.style.display = '';
+        count.textContent = '';
+        return;
+    }
+
+    empty.style.display = 'none';
+    count.textContent = items.length + ' item' + (items.length === 1 ? '' : 's');
+
+    items.sort((a, b) => a.name.localeCompare(b.name));
+
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'pantry-item';
+        div.setAttribute('data-location', item.location);
+
+        const icon = locationIcons[item.location] || '\u{1F3E0}';
+
+        const info = document.createElement('span');
+        info.className = 'pantry-item-info';
+        info.textContent = icon + ' ' + item.name;
+
+        const loc = document.createElement('span');
+        loc.className = 'pantry-item-location';
+        loc.textContent = item.location;
+
+        const remove = document.createElement('button');
+        remove.className = 'pantry-item-remove';
+        remove.textContent = '\u00D7';
+        remove.addEventListener('click', function() { removePantryItem(item.name); });
+
+        div.appendChild(info);
+        div.appendChild(loc);
+        div.appendChild(remove);
+        list.appendChild(div);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', renderPantry);
+</script>
+{{end}}

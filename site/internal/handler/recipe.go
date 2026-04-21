@@ -119,6 +119,13 @@ func (s *Server) handleMealPlan(w http.ResponseWriter, r *http.Request) {
 	s.render(w, "mealplan", data)
 }
 
+func (s *Server) handlePantry(w http.ResponseWriter, r *http.Request) {
+	data := map[string]interface{}{
+		"Title": "Pantry & Fridge",
+	}
+	s.render(w, "pantry", data)
+}
+
 func (s *Server) handleShoppingList(w http.ResponseWriter, r *http.Request) {
 	slugParam := r.URL.Query().Get("slugs")
 	if slugParam == "" {
@@ -134,11 +141,13 @@ func (s *Server) handleShoppingList(w http.ResponseWriter, r *http.Request) {
 	slugs := strings.Split(slugParam, ",")
 	list := s.idx.GenerateShoppingList(slugs)
 	pricedItems, total := recipe.PriceShoppingList(list)
+	departments := recipe.GroupByDepartment(pricedItems)
 
 	data := map[string]interface{}{
 		"Title":          "Shopping List",
 		"Items":          list.Items,
 		"PricedItems":    pricedItems,
+		"Departments":    departments,
 		"EstimatedTotal": total,
 		"HasSaved":       false,
 	}

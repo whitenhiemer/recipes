@@ -2,267 +2,319 @@ package recipe
 
 import "strings"
 
-var priceTable = map[string]float64{
-	// Proteins
-	"ground beef":       5.99,
-	"lean ground beef":  6.49,
-	"chicken breast":    7.99,
-	"chicken thighs":    5.49,
-	"chicken thigh":     5.49,
-	"pork loin":         12.99,
-	"pork chops":        7.99,
-	"pork chop":         7.99,
-	"bacon":             6.99,
-	"pancetta":          4.99,
-	"breakfast sausage": 4.99,
-	"sausage":           4.99,
-	"tuna":              1.99,
-	"eggs":              4.49,
-	"egg":               4.49,
-	"egg yolk":          4.49,
+type Department int
 
-	// Dairy
-	"butter":          4.99,
-	"unsalted butter": 4.99,
-	"cold butter":     4.99,
-	"milk":            3.99,
-	"whole milk":      3.99,
-	"cream":           4.49,
-	"sour cream":      2.49,
-	"yogurt":          3.99,
-	"cheddar cheese":  4.49,
-	"cheddar":         4.49,
-	"american cheese": 3.99,
-	"swiss cheese":    4.49,
-	"cheese":          4.49,
-	"parmesan":        5.99,
-	"parmesan cheese": 5.99,
+const (
+	DeptProduce Department = iota
+	DeptMeat
+	DeptDairy
+	DeptBakery
+	DeptGrains
+	DeptCanned
+	DeptCondiments
+	DeptSpices
+	DeptBaking
+	DeptOther
+)
+
+func (d Department) String() string {
+	switch d {
+	case DeptProduce:
+		return "Produce"
+	case DeptMeat:
+		return "Meat & Seafood"
+	case DeptDairy:
+		return "Dairy & Eggs"
+	case DeptBakery:
+		return "Bakery"
+	case DeptGrains:
+		return "Grains & Pasta"
+	case DeptCanned:
+		return "Canned Goods"
+	case DeptCondiments:
+		return "Condiments & Sauces"
+	case DeptSpices:
+		return "Spices & Seasonings"
+	case DeptBaking:
+		return "Baking"
+	case DeptOther:
+		return "Other"
+	}
+	return "Other"
+}
+
+var DepartmentOrder = []Department{
+	DeptProduce,
+	DeptMeat,
+	DeptDairy,
+	DeptBakery,
+	DeptGrains,
+	DeptCanned,
+	DeptCondiments,
+	DeptSpices,
+	DeptBaking,
+	DeptOther,
+}
+
+type ingredientInfo struct {
+	Price      float64
+	Icon       string
+	Department Department
+}
+
+var ingredientTable = map[string]ingredientInfo{
+	// Proteins
+	"ground beef":       {5.99, "🥩", DeptMeat},
+	"lean ground beef":  {6.49, "🥩", DeptMeat},
+	"beef":              {5.99, "🥩", DeptMeat},
+	"brisket":           {8.99, "🥩", DeptMeat},
+	"chicken breast":    {7.99, "🍗", DeptMeat},
+	"chicken thighs":    {5.49, "🍗", DeptMeat},
+	"chicken thigh":     {5.49, "🍗", DeptMeat},
+	"chicken":           {5.49, "🍗", DeptMeat},
+	"pork loin":         {12.99, "🥩", DeptMeat},
+	"pork chops":        {7.99, "🥩", DeptMeat},
+	"pork chop":         {7.99, "🥩", DeptMeat},
+	"pork":              {7.99, "🥩", DeptMeat},
+	"bacon":             {6.99, "🥓", DeptMeat},
+	"pancetta":          {4.99, "🥓", DeptMeat},
+	"breakfast sausage": {4.99, "🌭", DeptMeat},
+	"sausage":           {4.99, "🌭", DeptMeat},
+	"tuna":              {1.99, "🐟", DeptMeat},
+	"shrimp":            {9.99, "🦐", DeptMeat},
+
+	// Dairy & Eggs
+	"eggs":              {4.49, "🥚", DeptDairy},
+	"egg":               {4.49, "🥚", DeptDairy},
+	"egg yolk":          {4.49, "🥚", DeptDairy},
+	"butter":            {4.99, "🧈", DeptDairy},
+	"unsalted butter":   {4.99, "🧈", DeptDairy},
+	"cold butter":       {4.99, "🧈", DeptDairy},
+	"milk":              {3.99, "🥛", DeptDairy},
+	"whole milk":        {3.99, "🥛", DeptDairy},
+	"cream":             {4.49, "🥛", DeptDairy},
+	"sour cream":        {2.49, "🥛", DeptDairy},
+	"yogurt":            {3.99, "🥛", DeptDairy},
+	"cheddar cheese":    {4.49, "🧀", DeptDairy},
+	"cheddar":           {4.49, "🧀", DeptDairy},
+	"american cheese":   {3.99, "🧀", DeptDairy},
+	"swiss cheese":      {4.49, "🧀", DeptDairy},
+	"cheese":            {4.49, "🧀", DeptDairy},
+	"parmesan":          {5.99, "🧀", DeptDairy},
+	"parmesan cheese":   {5.99, "🧀", DeptDairy},
+
+	// Bakery
+	"bread":    {3.49, "🍞", DeptBakery},
+	"biscuits": {2.99, "🍞", DeptBakery},
 
 	// Grains & Pasta
-	"flour":            3.99,
-	"all-purpose flour": 3.99,
-	"bread flour":      4.49,
-	"bread":            3.49,
-	"elbow macaroni":   1.49,
-	"macaroni":         1.49,
-	"spaghetti":        1.49,
-	"pasta":            1.49,
-	"tortillas":        3.49,
-	"flour tortillas":  3.49,
-	"tortilla":         3.49,
-	"taco shells":      2.49,
-	"biscuits":         2.99,
-	"rolled oats":      3.99,
-	"oats":             3.99,
-	"masa harina":      3.99,
-	"rice":             2.99,
+	"flour":            {3.99, "🌾", DeptGrains},
+	"all-purpose flour": {3.99, "🌾", DeptGrains},
+	"bread flour":      {4.49, "🌾", DeptGrains},
+	"elbow macaroni":   {1.49, "🍝", DeptGrains},
+	"macaroni":         {1.49, "🍝", DeptGrains},
+	"spaghetti":        {1.49, "🍝", DeptGrains},
+	"pasta":            {1.49, "🍝", DeptGrains},
+	"tortillas":        {3.49, "🫓", DeptGrains},
+	"flour tortillas":  {3.49, "🫓", DeptGrains},
+	"tortilla":         {3.49, "🫓", DeptGrains},
+	"taco shells":      {2.49, "🌮", DeptGrains},
+	"rolled oats":      {3.99, "🌾", DeptGrains},
+	"oats":             {3.99, "🌾", DeptGrains},
+	"masa harina":      {3.99, "🌽", DeptGrains},
+	"rice":             {2.99, "🍚", DeptGrains},
 
 	// Canned goods
-	"crushed tomatoes":  1.99,
-	"diced tomatoes":    1.49,
-	"tomato sauce":      1.29,
-	"tomato paste":      0.99,
-	"marinara sauce":    3.49,
-	"chicken broth":     2.49,
-	"beef broth":        2.49,
-	"broth":             2.49,
-	"kidney beans":      1.29,
-	"pumpkin":           2.99,
+	"crushed tomatoes": {1.99, "🍅", DeptCanned},
+	"diced tomatoes":   {1.49, "🍅", DeptCanned},
+	"tomato sauce":     {1.29, "🍅", DeptCanned},
+	"tomato paste":     {0.99, "🍅", DeptCanned},
+	"marinara sauce":   {3.49, "🍅", DeptCanned},
+	"chicken broth":    {2.49, "🫙", DeptCanned},
+	"beef broth":       {2.49, "🫙", DeptCanned},
+	"broth":            {2.49, "🫙", DeptCanned},
+	"kidney beans":     {1.29, "🫙", DeptCanned},
+	"pumpkin":          {2.99, "🎃", DeptCanned},
 
 	// Produce
-	"onion":       0.99,
-	"onions":      0.99,
-	"garlic":      0.69,
-	"tomato":      1.29,
-	"tomatoes":    1.29,
-	"lettuce":     1.99,
-	"bell pepper": 1.29,
-	"broccoli":    2.49,
-	"snap peas":   2.99,
-	"celery":      1.99,
-	"potatoes":    3.99,
-	"potato":      0.99,
-	"green onions": 0.99,
-	"cilantro":    0.99,
-	"parsley":     0.99,
-	"lemon":       0.69,
-	"lemon juice": 2.49,
-	"ginger":      0.99,
-	"green chili":  0.49,
-	"jalapenos":   0.49,
-	"lime":        0.49,
+	"onion":        {0.99, "🧅", DeptProduce},
+	"onions":       {0.99, "🧅", DeptProduce},
+	"red onion":    {0.99, "🧅", DeptProduce},
+	"garlic":       {0.69, "🧄", DeptProduce},
+	"tomato":       {1.29, "🍅", DeptProduce},
+	"tomatoes":     {1.29, "🍅", DeptProduce},
+	"lettuce":      {1.99, "🥬", DeptProduce},
+	"bell pepper":  {1.29, "🫑", DeptProduce},
+	"broccoli":     {2.49, "🥦", DeptProduce},
+	"snap peas":    {2.99, "🫛", DeptProduce},
+	"celery":       {1.99, "🥬", DeptProduce},
+	"potatoes":     {3.99, "🥔", DeptProduce},
+	"potato":       {0.99, "🥔", DeptProduce},
+	"green onions": {0.99, "🧅", DeptProduce},
+	"cilantro":     {0.99, "🌿", DeptProduce},
+	"parsley":      {0.99, "🌿", DeptProduce},
+	"lemon":        {0.69, "🍋", DeptProduce},
+	"lemon juice":  {2.49, "🍋", DeptProduce},
+	"ginger":       {0.99, "🫚", DeptProduce},
+	"green chili":  {0.49, "🌶️", DeptProduce},
+	"jalapenos":    {0.49, "🌶️", DeptProduce},
+	"lime":         {0.49, "🍋", DeptProduce},
 
-	// Oils & Condiments
-	"olive oil":        6.99,
-	"vegetable oil":    3.99,
-	"sesame oil":       4.49,
-	"mayo":             4.49,
-	"mayonnaise":       4.49,
-	"dijon mustard":    3.49,
-	"mustard":          2.49,
-	"yellow mustard":   2.49,
-	"soy sauce":        3.49,
-	"oyster sauce":     3.99,
-	"maple syrup":      6.99,
-	"honey":            5.99,
-	"salsa":            3.49,
-	"hot sauce":        2.99,
-	"ketchup":          3.49,
-	"vanilla extract":  4.99,
-	"vanilla":          4.99,
+	// Condiments & Sauces
+	"olive oil":       {6.99, "🫒", DeptCondiments},
+	"vegetable oil":   {3.99, "🫒", DeptCondiments},
+	"sesame oil":      {4.49, "🫒", DeptCondiments},
+	"mayo":            {4.49, "🫙", DeptCondiments},
+	"mayonnaise":      {4.49, "🫙", DeptCondiments},
+	"dijon mustard":   {3.49, "🫙", DeptCondiments},
+	"mustard":         {2.49, "🫙", DeptCondiments},
+	"yellow mustard":  {2.49, "🫙", DeptCondiments},
+	"soy sauce":       {3.49, "🫙", DeptCondiments},
+	"oyster sauce":    {3.99, "🫙", DeptCondiments},
+	"maple syrup":     {6.99, "🍁", DeptCondiments},
+	"honey":           {5.99, "🍯", DeptCondiments},
+	"salsa":           {3.49, "🫙", DeptCondiments},
+	"hot sauce":       {2.99, "🌶️", DeptCondiments},
+	"ketchup":         {3.49, "🫙", DeptCondiments},
+	"vanilla extract": {4.99, "🫙", DeptBaking},
+	"vanilla":         {4.99, "🫙", DeptBaking},
 
 	// Baking
-	"sugar":            3.49,
-	"brown sugar":      3.49,
-	"baking powder":    2.99,
-	"baking soda":      1.49,
-	"cornstarch":       2.49,
-	"chia seeds":       5.99,
+	"sugar":         {3.49, "🧂", DeptBaking},
+	"brown sugar":   {3.49, "🧂", DeptBaking},
+	"baking powder": {2.99, "🧂", DeptBaking},
+	"baking soda":   {1.49, "🧂", DeptBaking},
+	"cornstarch":    {2.49, "🧂", DeptBaking},
+	"chia seeds":    {5.99, "🌱", DeptBaking},
 
 	// Spices
-	"salt":             1.99,
-	"kosher salt":      3.49,
-	"pepper":           3.99,
-	"black pepper":     3.99,
-	"cinnamon":         3.49,
-	"nutmeg":           4.49,
-	"cloves":           4.49,
-	"ground cloves":    4.49,
-	"paprika":          3.49,
-	"chili powder":     3.49,
-	"cumin":            3.49,
-	"ground cumin":     3.49,
-	"garlic powder":    3.49,
-	"onion powder":     3.49,
-	"cayenne":          3.49,
-	"red pepper flakes": 3.49,
-	"italian seasoning": 3.49,
-	"italian herbs":    3.49,
-	"oregano":          3.49,
-	"dried oregano":    3.49,
-	"thyme":            2.99,
-	"rosemary":         2.99,
-	"bay leaves":       3.49,
-	"cumin seeds":      3.49,
-	"asafoetida":       5.99,
-	"coriander powder": 3.49,
-	"turmeric":         3.49,
-	"red chili powder":  3.49,
+	"salt":              {1.99, "🧂", DeptSpices},
+	"kosher salt":       {3.49, "🧂", DeptSpices},
+	"pepper":            {3.99, "🧂", DeptSpices},
+	"black pepper":      {3.99, "🧂", DeptSpices},
+	"cinnamon":          {3.49, "🧂", DeptSpices},
+	"nutmeg":            {4.49, "🧂", DeptSpices},
+	"cloves":            {4.49, "🧂", DeptSpices},
+	"ground cloves":     {4.49, "🧂", DeptSpices},
+	"paprika":           {3.49, "🧂", DeptSpices},
+	"chili powder":      {3.49, "🌶️", DeptSpices},
+	"cumin":             {3.49, "🧂", DeptSpices},
+	"ground cumin":      {3.49, "🧂", DeptSpices},
+	"garlic powder":     {3.49, "🧂", DeptSpices},
+	"onion powder":      {3.49, "🧂", DeptSpices},
+	"cayenne":           {3.49, "🌶️", DeptSpices},
+	"red pepper flakes": {3.49, "🌶️", DeptSpices},
+	"italian seasoning": {3.49, "🌿", DeptSpices},
+	"italian herbs":     {3.49, "🌿", DeptSpices},
+	"oregano":           {3.49, "🌿", DeptSpices},
+	"dried oregano":     {3.49, "🌿", DeptSpices},
+	"thyme":             {2.99, "🌿", DeptSpices},
+	"rosemary":          {2.99, "🌿", DeptSpices},
+	"bay leaves":        {3.49, "🌿", DeptSpices},
+	"cumin seeds":       {3.49, "🧂", DeptSpices},
+	"asafoetida":        {5.99, "🧂", DeptSpices},
+	"coriander powder":  {3.49, "🧂", DeptSpices},
+	"turmeric":          {3.49, "🧂", DeptSpices},
+	"red chili powder":  {3.49, "🌶️", DeptSpices},
 
 	// Other
-	"corn husks":       3.99,
-	"lard":             3.99,
-	"granola":          4.99,
-	"water":            0.00,
-	"cold water":       0.00,
+	"corn husks": {3.99, "🌽", DeptOther},
+	"lard":       {3.99, "🫙", DeptOther},
+	"granola":    {4.99, "🥣", DeptOther},
+	"water":      {0.00, "💧", DeptOther},
+	"cold water": {0.00, "💧", DeptOther},
+}
+
+func lookupIngredient(name string) (ingredientInfo, bool) {
+	lower := strings.ToLower(strings.TrimSpace(name))
+
+	if info, ok := ingredientTable[lower]; ok {
+		return info, true
+	}
+
+	for key, info := range ingredientTable {
+		if strings.Contains(lower, key) || strings.Contains(key, lower) {
+			return info, true
+		}
+	}
+
+	return ingredientInfo{}, false
 }
 
 func EstimatePrice(ingredientName string) float64 {
-	name := strings.ToLower(strings.TrimSpace(ingredientName))
-
-	if price, ok := priceTable[name]; ok {
-		return price
+	if info, ok := lookupIngredient(ingredientName); ok {
+		return info.Price
 	}
-
-	for key, price := range priceTable {
-		if strings.Contains(name, key) || strings.Contains(key, name) {
-			return price
-		}
-	}
-
 	return 2.99
 }
 
-var iconTable = map[string]string{
-	// Proteins
-	"ground beef": "🥩", "lean ground beef": "🥩", "beef": "🥩", "brisket": "🥩",
-	"chicken breast": "🍗", "chicken thighs": "🍗", "chicken thigh": "🍗", "chicken": "🍗",
-	"pork loin": "🥩", "pork chops": "🥩", "pork chop": "🥩", "pork": "🥩",
-	"bacon": "🥓", "pancetta": "🥓",
-	"breakfast sausage": "🌭", "sausage": "🌭",
-	"tuna": "🐟", "shrimp": "🦐",
-
-	// Dairy & Eggs
-	"egg": "🥚", "eggs": "🥚", "egg yolk": "🥚",
-	"butter": "🧈", "unsalted butter": "🧈", "cold butter": "🧈",
-	"milk": "🥛", "whole milk": "🥛", "cream": "🥛",
-	"cheese": "🧀", "cheddar": "🧀", "cheddar cheese": "🧀", "american cheese": "🧀",
-	"swiss cheese": "🧀", "parmesan": "🧀", "parmesan cheese": "🧀",
-	"sour cream": "🥛", "yogurt": "🥛",
-
-	// Grains & Pasta
-	"flour": "🌾", "all-purpose flour": "🌾", "bread flour": "🌾",
-	"bread": "🍞", "tortillas": "🫓", "flour tortillas": "🫓", "tortilla": "🫓",
-	"taco shells": "🌮",
-	"pasta": "🍝", "spaghetti": "🍝", "elbow macaroni": "🍝", "macaroni": "🍝",
-	"rice": "🍚", "rolled oats": "🌾", "oats": "🌾",
-	"biscuits": "🍞", "masa harina": "🌽",
-
-	// Produce
-	"onion": "🧅", "onions": "🧅", "red onion": "🧅",
-	"garlic": "🧄",
-	"tomato": "🍅", "tomatoes": "🍅",
-	"lettuce": "🥬",
-	"bell pepper": "🫑", "green chili": "🌶️", "jalapenos": "🌶️",
-	"broccoli": "🥦",
-	"potato": "🥔", "potatoes": "🥔",
-	"celery": "🥬",
-	"snap peas": "🫛",
-	"ginger": "🫚",
-	"lemon": "🍋", "lime": "🍋",
-	"green onions": "🧅",
-	"cilantro": "🌿", "parsley": "🌿",
-	"pumpkin": "🎃",
-
-	// Oils & Condiments
-	"olive oil": "🫒", "vegetable oil": "🫒", "sesame oil": "🫒",
-	"mayo": "🫙", "mayonnaise": "🫙",
-	"mustard": "🫙", "dijon mustard": "🫙", "yellow mustard": "🫙",
-	"soy sauce": "🫙", "oyster sauce": "🫙",
-	"maple syrup": "🍁", "honey": "🍯",
-	"salsa": "🫙", "hot sauce": "🌶️", "ketchup": "🫙",
-	"vanilla extract": "🫙", "vanilla": "🫙",
-
-	// Baking
-	"sugar": "🧂", "brown sugar": "🧂",
-	"baking powder": "🧂", "baking soda": "🧂", "cornstarch": "🧂",
-
-	// Spices
-	"salt": "🧂", "kosher salt": "🧂",
-	"pepper": "🧂", "black pepper": "🧂",
-	"cinnamon": "🧂", "nutmeg": "🧂", "cloves": "🧂", "ground cloves": "🧂",
-	"paprika": "🧂", "chili powder": "🌶️", "cumin": "🧂", "ground cumin": "🧂",
-	"garlic powder": "🧂", "onion powder": "🧂", "cayenne": "🌶️",
-	"red pepper flakes": "🌶️", "italian seasoning": "🌿", "italian herbs": "🌿",
-	"oregano": "🌿", "dried oregano": "🌿", "thyme": "🌿", "rosemary": "🌿",
-	"bay leaves": "🌿", "turmeric": "🧂",
-
-	// Other
-	"corn husks": "🌽", "lard": "🫙", "water": "💧", "cold water": "💧",
-	"granola": "🥣", "chia seeds": "🌱",
-}
-
 func IngredientIcon(ingredientName string) string {
-	name := strings.ToLower(strings.TrimSpace(ingredientName))
-
-	if icon, ok := iconTable[name]; ok {
-		return icon
+	if info, ok := lookupIngredient(ingredientName); ok {
+		return info.Icon
 	}
-
-	for key, icon := range iconTable {
-		if strings.Contains(name, key) || strings.Contains(key, name) {
-			return icon
-		}
-	}
-
 	return "🛒"
 }
 
+func IngredientDepartment(ingredientName string) Department {
+	if info, ok := lookupIngredient(ingredientName); ok {
+		return info.Department
+	}
+	return DeptOther
+}
+
+var defaultPantryStaples = map[string]bool{
+	"salt":              true,
+	"kosher salt":       true,
+	"pepper":            true,
+	"black pepper":      true,
+	"olive oil":         true,
+	"vegetable oil":     true,
+	"flour":             true,
+	"all-purpose flour": true,
+	"sugar":             true,
+	"brown sugar":       true,
+	"baking powder":     true,
+	"baking soda":       true,
+	"cornstarch":        true,
+	"garlic powder":     true,
+	"onion powder":      true,
+	"paprika":           true,
+	"chili powder":      true,
+	"cumin":             true,
+	"ground cumin":      true,
+	"cayenne":           true,
+	"red pepper flakes": true,
+	"italian seasoning": true,
+	"oregano":           true,
+	"dried oregano":     true,
+	"cinnamon":          true,
+	"bay leaves":        true,
+	"soy sauce":         true,
+	"vanilla extract":   true,
+	"vanilla":           true,
+	"honey":             true,
+	"vinegar":           true,
+	"water":             true,
+	"cold water":        true,
+}
+
+func IsPantryStaple(ingredientName string) bool {
+	name := strings.ToLower(strings.TrimSpace(ingredientName))
+	return defaultPantryStaples[name]
+}
+
 type PricedShoppingItem struct {
-	Name    string
-	Amounts []string
-	Price   float64
-	Icon    string
+	Name       string
+	Amounts    []string
+	Price      float64
+	Icon       string
+	Department string
+	IsPantry   bool
+}
+
+type ShoppingDepartment struct {
+	Name  string
+	Items []PricedShoppingItem
 }
 
 func PriceShoppingList(list *ShoppingList) ([]PricedShoppingItem, float64) {
@@ -271,14 +323,39 @@ func PriceShoppingList(list *ShoppingList) ([]PricedShoppingItem, float64) {
 
 	for _, item := range list.Items {
 		price := EstimatePrice(item.Name)
+		pantry := IsPantryStaple(item.Name)
 		items = append(items, PricedShoppingItem{
-			Name:    item.Name,
-			Amounts: item.Amounts,
-			Price:   price,
-			Icon:    IngredientIcon(item.Name),
+			Name:       item.Name,
+			Amounts:    item.Amounts,
+			Price:      price,
+			Icon:       IngredientIcon(item.Name),
+			Department: IngredientDepartment(item.Name).String(),
+			IsPantry:   pantry,
 		})
-		total += price
+		if !pantry {
+			total += price
+		}
 	}
 
 	return items, total
+}
+
+func GroupByDepartment(items []PricedShoppingItem) []ShoppingDepartment {
+	grouped := make(map[string][]PricedShoppingItem)
+	for _, item := range items {
+		grouped[item.Department] = append(grouped[item.Department], item)
+	}
+
+	var departments []ShoppingDepartment
+	for _, dept := range DepartmentOrder {
+		name := dept.String()
+		if items, ok := grouped[name]; ok {
+			departments = append(departments, ShoppingDepartment{
+				Name:  name,
+				Items: items,
+			})
+		}
+	}
+
+	return departments
 }

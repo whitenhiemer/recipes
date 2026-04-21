@@ -31,6 +31,7 @@ func Register(mux *http.ServeMux, idx *recipe.Index, cfg *config.Config, db *sto
 	mux.HandleFunc("GET /mealplan", s.handleMealPlan)
 	mux.HandleFunc("POST /api/shopping-list", s.handleShoppingListAPI)
 	mux.HandleFunc("GET /shopping-list", s.handleShoppingList)
+	mux.HandleFunc("GET /pantry", s.handlePantry)
 	mux.HandleFunc("GET /new", s.handleNewRecipe)
 	mux.HandleFunc("POST /api/recipe", s.handleCreateRecipeAPI)
 	mux.HandleFunc("POST /api/image", s.handleImageUpload)
@@ -45,7 +46,7 @@ func (s *Server) loadTemplates() {
 
 	base := append([]string{layout}, partials...)
 
-	pages := []string{"home", "recipe", "search", "tags", "mealplan", "shopping", "new"}
+	pages := []string{"home", "recipe", "search", "tags", "mealplan", "shopping", "pantry", "new"}
 	s.templates = make(map[string]*template.Template)
 
 	for _, page := range pages {

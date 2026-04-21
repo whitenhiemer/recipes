@@ -1,5 +1,12 @@
 {{template "layout" .}}
 {{define "content"}}
+<div class="print-header">
+    <img src="/static/img/logo.png" alt="" class="print-logo">
+    <div class="print-header-text">
+        <strong>House Woodward Gourmand</strong>
+        <span>Shopping List</span>
+    </div>
+</div>
 <section>
     <h2>Shopping List</h2>
     {{if .Items}}
@@ -8,32 +15,58 @@
         <button class="secondary" onclick="window.print()">Print</button>
         <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
     </div>
+    <div class="pantry-toggle">
+        <label>
+            <input type="checkbox" id="hide-pantry" onchange="applyFilters()">
+            Hide pantry staples
+        </label>
+        <label>
+            <input type="checkbox" id="hide-on-hand" onchange="applyFilters()">
+            Hide items on hand
+        </label>
+    </div>
     <div id="shopping-list">
-        {{range .PricedItems}}
-        <div class="shopping-item" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}" data-icon="{{.Icon}}">
-            <label>
-                <input type="checkbox" onchange="toggleShoppingItem(this)">
-                <span class="item-icon">{{.Icon}}</span>
-                <strong>{{.Name}}</strong>
-                <span class="item-price">${{printf "%.2f" .Price}}</span>
-            </label>
-            <ul>
-                {{range .Amounts}}
-                <li>{{.}}</li>
-                {{end}}
-            </ul>
+        {{range .Departments}}
+        <div class="shopping-dept" data-dept="{{.Name}}">
+            <h3 class="dept-header">{{.Name}}</h3>
+            {{range .Items}}
+            <div class="shopping-item{{if .IsPantry}} is-pantry{{end}}" data-name="{{.Name}}" data-price="{{printf "%.2f" .Price}}" data-icon="{{.Icon}}" data-dept="{{.Department}}" data-pantry="{{.IsPantry}}">
+                <label>
+                    <input type="checkbox" onchange="toggleShoppingItem(this)">
+                    <span class="item-icon">{{.Icon}}</span>
+                    <strong>{{.Name}}</strong>
+                    {{if .IsPantry}}<span class="pantry-badge">(pantry)</span>{{end}}
+                    <span class="item-price">${{printf "%.2f" .Price}}</span>
+                </label>
+                <ul>
+                    {{range .Amounts}}
+                    <li>{{.}}</li>
+                    {{end}}
+                </ul>
+            </div>
+            {{end}}
         </div>
         {{end}}
     </div>
     <div class="shopping-total">
         <strong>Estimated Total: ${{printf "%.2f" .EstimatedTotal}}</strong>
-        <p class="shopping-total-note">Prices are estimates based on typical grocery store pricing</p>
+        <p class="shopping-total-note">Excludes pantry staples and items on hand. Prices are estimates.</p>
     </div>
     {{else if .HasSaved}}
     <div class="shopping-actions">
         <button class="secondary" onclick="window.print()">Print</button>
         <button class="secondary" onclick="copyShoppingList()">Copy as Text</button>
         <button class="secondary outline" onclick="clearSavedShoppingList()">Clear Saved List</button>
+    </div>
+    <div class="pantry-toggle">
+        <label>
+            <input type="checkbox" id="hide-pantry" onchange="applyFilters()">
+            Hide pantry staples
+        </label>
+        <label>
+            <input type="checkbox" id="hide-on-hand" onchange="applyFilters()">
+            Hide items on hand
+        </label>
     </div>
     <div id="shopping-list"></div>
     {{else}}
@@ -44,6 +77,67 @@
 
 <script>
 const SHOPPING_KEY = 'recipe-shopping-list';
+const PANTRY_HIDE_KEY = 'recipe-hide-pantry';
+const ON_HAND_HIDE_KEY = 'recipe-hide-on-hand';
+const PANTRY_KEY = 'recipe-pantry-inventory';
+
+function getPantryNames() {
+    const data = localStorage.getItem(PANTRY_KEY);
+    if (!data) return new Set();
+    const items = JSON.parse(data);
+    return new Set(items.map(i => i.name.toLowerCase()));
+}
+
+function markOnHandItems() {
+    const onHand = getPantryNames();
+    document.querySelectorAll('.shopping-item').forEach(el => {
+        const name = (el.getAttribute('data-name') || '').toLowerCase();
+        let match = onHand.has(name);
+        if (!match) {
+            for (const pantryName of onHand) {
+                if (name.includes(pantryName) || pantryName.includes(name)) {
+                    match = true;
+                    break;
+                }
+            }
+        }
+        if (match && !el.classList.contains('is-pantry')) {
+            el.classList.add('is-on-hand');
+            el.setAttribute('data-on-hand', 'true');
+            const label = el.querySelector('label');
+            if (label && !label.querySelector('.on-hand-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'on-hand-badge';
+                badge.textContent = '(on hand)';
+                const strong = label.querySelector('strong');
+                if (strong && strong.nextSibling) {
+                    label.insertBefore(badge, strong.nextSibling);
+                }
+            }
+        }
+    });
+}
+
+function applyFilters() {
+    const hidePantry = document.getElementById('hide-pantry') && document.getElementById('hide-pantry').checked;
+    const hideOnHand = document.getElementById('hide-on-hand') && document.getElementById('hide-on-hand').checked;
+
+    document.querySelectorAll('.shopping-item').forEach(el => {
+        const isPantry = el.getAttribute('data-pantry') === 'true';
+        const isOnHand = el.getAttribute('data-on-hand') === 'true';
+        const hide = (hidePantry && isPantry) || (hideOnHand && isOnHand);
+        el.classList.toggle('hide-pantry', hidePantry && isPantry);
+        el.classList.toggle('hide-on-hand', hideOnHand && isOnHand);
+    });
+
+    document.querySelectorAll('.shopping-dept').forEach(dept => {
+        const visible = dept.querySelectorAll('.shopping-item:not(.hide-pantry):not(.hide-on-hand)');
+        dept.style.display = visible.length ? '' : 'none';
+    });
+
+    localStorage.setItem(PANTRY_HIDE_KEY, hidePantry ? '1' : '0');
+    localStorage.setItem(ON_HAND_HIDE_KEY, hideOnHand ? '1' : '0');
+}
 
 function saveShoppingList() {
     const items = [];
@@ -52,9 +146,12 @@ function saveShoppingList() {
         const checked = el.querySelector('input[type="checkbox"]').checked;
         const icon = el.getAttribute('data-icon') || '';
         const price = el.getAttribute('data-price') || '0.00';
+        const dept = el.getAttribute('data-dept') || 'Other';
+        const pantry = el.getAttribute('data-pantry') === 'true';
+        const onHand = el.getAttribute('data-on-hand') === 'true';
         const amounts = [];
         el.querySelectorAll('li').forEach(li => amounts.push(li.textContent));
-        items.push({ name, amounts, checked, icon, price });
+        items.push({ name, amounts, checked, icon, price, dept, pantry, onHand });
     });
     localStorage.setItem(SHOPPING_KEY, JSON.stringify(items));
     alert('Shopping list saved!');
@@ -70,61 +167,93 @@ function loadSavedShoppingList() {
     const container = document.getElementById('shopping-list');
     if (!container) return false;
 
-    // Only load saved list if no server-rendered items exist
     if (container.children.length > 0) return false;
 
-    let total = 0;
+    const grouped = {};
+    const deptOrder = [];
     items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'shopping-item';
-        div.setAttribute('data-name', item.name);
-        if (item.icon) div.setAttribute('data-icon', item.icon);
-        if (item.price) div.setAttribute('data-price', item.price);
-
-        const label = document.createElement('label');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = item.checked;
-        checkbox.addEventListener('change', function() { toggleShoppingItem(this); });
-
-        label.appendChild(checkbox);
-
-        if (item.icon) {
-            const iconSpan = document.createElement('span');
-            iconSpan.className = 'item-icon';
-            iconSpan.textContent = item.icon;
-            label.appendChild(iconSpan);
+        const dept = item.dept || 'Other';
+        if (!grouped[dept]) {
+            grouped[dept] = [];
+            deptOrder.push(dept);
         }
+        grouped[dept].push(item);
+    });
 
-        const strong = document.createElement('strong');
-        strong.textContent = item.name;
-        if (item.checked) {
-            strong.style.textDecoration = 'line-through';
-            strong.style.opacity = '0.5';
-        }
-        label.appendChild(strong);
+    let total = 0;
+    deptOrder.forEach(dept => {
+        const section = document.createElement('div');
+        section.className = 'shopping-dept';
+        section.setAttribute('data-dept', dept);
 
-        if (item.price && parseFloat(item.price) > 0) {
-            const priceSpan = document.createElement('span');
-            priceSpan.className = 'item-price';
-            priceSpan.textContent = '$' + parseFloat(item.price).toFixed(2);
-            label.appendChild(priceSpan);
-            total += parseFloat(item.price);
-        }
+        const header = document.createElement('h3');
+        header.className = 'dept-header';
+        header.textContent = dept;
+        section.appendChild(header);
 
-        div.appendChild(label);
+        grouped[dept].forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'shopping-item';
+            if (item.pantry) div.classList.add('is-pantry');
+            div.setAttribute('data-name', item.name);
+            if (item.icon) div.setAttribute('data-icon', item.icon);
+            if (item.price) div.setAttribute('data-price', item.price);
+            if (item.dept) div.setAttribute('data-dept', item.dept);
+            div.setAttribute('data-pantry', item.pantry ? 'true' : 'false');
 
-        if (item.amounts && item.amounts.length) {
-            const ul = document.createElement('ul');
-            item.amounts.forEach(amt => {
-                const li = document.createElement('li');
-                li.textContent = amt;
-                ul.appendChild(li);
-            });
-            div.appendChild(ul);
-        }
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = item.checked;
+            checkbox.addEventListener('change', function() { toggleShoppingItem(this); });
+            label.appendChild(checkbox);
 
-        container.appendChild(div);
+            if (item.icon) {
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'item-icon';
+                iconSpan.textContent = item.icon;
+                label.appendChild(iconSpan);
+            }
+
+            const strong = document.createElement('strong');
+            strong.textContent = item.name;
+            if (item.checked) {
+                strong.style.textDecoration = 'line-through';
+                strong.style.opacity = '0.5';
+            }
+            label.appendChild(strong);
+
+            if (item.pantry) {
+                const badge = document.createElement('span');
+                badge.className = 'pantry-badge';
+                badge.textContent = '(pantry)';
+                label.appendChild(badge);
+            }
+
+            if (item.price && parseFloat(item.price) > 0) {
+                const priceSpan = document.createElement('span');
+                priceSpan.className = 'item-price';
+                priceSpan.textContent = '$' + parseFloat(item.price).toFixed(2);
+                label.appendChild(priceSpan);
+                if (!item.pantry) total += parseFloat(item.price);
+            }
+
+            div.appendChild(label);
+
+            if (item.amounts && item.amounts.length) {
+                const ul = document.createElement('ul');
+                item.amounts.forEach(amt => {
+                    const li = document.createElement('li');
+                    li.textContent = amt;
+                    ul.appendChild(li);
+                });
+                div.appendChild(ul);
+            }
+
+            section.appendChild(div);
+        });
+
+        container.appendChild(section);
     });
 
     if (total > 0) {
@@ -135,7 +264,7 @@ function loadSavedShoppingList() {
         totalDiv.appendChild(totalStrong);
         const note = document.createElement('p');
         note.className = 'shopping-total-note';
-        note.textContent = 'Prices are estimates based on typical grocery store pricing';
+        note.textContent = 'Excludes pantry staples and items on hand. Prices are estimates.';
         totalDiv.appendChild(note);
         container.parentNode.appendChild(totalDiv);
     }
@@ -165,16 +294,49 @@ function updateSavedCheckedState() {
     if (!data) return;
 
     const items = JSON.parse(data);
-    document.querySelectorAll('.shopping-item').forEach((el, i) => {
+    let i = 0;
+    document.querySelectorAll('.shopping-item').forEach(el => {
         if (items[i]) {
             items[i].checked = el.querySelector('input[type="checkbox"]').checked;
         }
+        i++;
     });
     localStorage.setItem(SHOPPING_KEY, JSON.stringify(items));
 }
 
+function copyShoppingList() {
+    const hidePantry = document.getElementById('hide-pantry') && document.getElementById('hide-pantry').checked;
+    const hideOnHand = document.getElementById('hide-on-hand') && document.getElementById('hide-on-hand').checked;
+    const lines = [];
+    document.querySelectorAll('.shopping-dept').forEach(section => {
+        const selector = '.shopping-item' +
+            (hidePantry ? ':not(.is-pantry)' : '') +
+            (hideOnHand ? ':not(.is-on-hand)' : '');
+        const deptItems = section.querySelectorAll(selector);
+        if (!deptItems.length) return;
+        const dept = section.querySelector('.dept-header').textContent;
+        lines.push('\n' + dept.toUpperCase());
+        deptItems.forEach(el => {
+            const name = el.querySelector('strong').textContent;
+            lines.push('  ' + name);
+        });
+    });
+    const totalEl = document.querySelector('.shopping-total strong');
+    if (totalEl) lines.push('\n' + totalEl.textContent);
+    navigator.clipboard.writeText(lines.join('\n').trim()).then(() => alert('Copied to clipboard!'));
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadSavedShoppingList();
+    markOnHandItems();
+
+    const pantryHide = localStorage.getItem(PANTRY_HIDE_KEY);
+    const onHandHide = localStorage.getItem(ON_HAND_HIDE_KEY);
+    const pantryCb = document.getElementById('hide-pantry');
+    const onHandCb = document.getElementById('hide-on-hand');
+    if (pantryCb && pantryHide === '1') pantryCb.checked = true;
+    if (onHandCb && onHandHide === '1') onHandCb.checked = true;
+    if (pantryHide === '1' || onHandHide === '1') applyFilters();
 });
 </script>
 {{end}}
