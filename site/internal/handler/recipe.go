@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"strings"
@@ -61,10 +62,13 @@ func (s *Server) handleRecipeDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ingredientsJSON, _ := json.Marshal(recipe.Ingredients)
+
 	data := map[string]interface{}{
-		"Title":   recipe.Title,
-		"Recipe":  recipe,
-		"Content": template.HTML(recipe.HTMLContent),
+		"Title":           recipe.Title,
+		"Recipe":          recipe,
+		"Content":         template.HTML(recipe.HTMLContent),
+		"IngredientsJSON": template.JS(ingredientsJSON),
 	}
 	s.render(w, "recipe", data)
 }

@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	metaRegex = regexp.MustCompile(`\*\*Prep Time:\*\*\s*(.+?)\s*\|\s*\*\*Cook Time:\*\*\s*(.+?)\s*\|\s*\*\*Servings:\*\*\s*(.+)`)
+	metaRegex = regexp.MustCompile(`(?:\*\*)?Prep Time:(?:\*\*)?\s*(.+?)\s*\|\s*(?:\*\*)?Cook Time:(?:\*\*)?\s*(.+?)\s*\|\s*(?:\*\*)?Servings:(?:\*\*)?\s*(.+)`)
 	unitRegex = regexp.MustCompile(`(?i)^([\d/\.\s½¼¾⅓⅔]+)?\s*(cups?|tbsp|tsp|oz|lbs?|g|kg|ml|cloves?|cans?|bunch|pinch|dash|slices?|pieces?|stalks?|heads?)?\s*[,.]?\s*(.+)$`)
 )
 

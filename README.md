@@ -56,6 +56,7 @@ You can also add recipes directly from the website using the "+ New Recipe" butt
 - **Recipe creation** -- step-by-step wizard, markdown file upload, or import from URL
 - **URL import** -- paste a recipe URL to extract data via JSON-LD; source attribution on recipe detail pages
 - **Recipe search** -- search Google for recipes and import directly from the results
+- **Recipe scaling** -- default 5 servings with +/- control; ingredient quantities scale with fraction display
 - **Kitchen mode** -- screen wake lock keeps your phone awake while cooking
 - **Mobile-first** -- responsive design with touch-friendly controls
 

@@ -248,6 +248,53 @@
     padding: 0.5rem 0;
 }
 
+/* Servings Control */
+.servings-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--pico-card-background-color);
+    border-radius: 0.5rem;
+    border: 1px solid var(--pico-muted-border-color);
+}
+
+.servings-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--pico-primary-background);
+    background: transparent;
+    color: var(--pico-primary-background);
+    font-size: 1.25rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.servings-btn:hover {
+    background: var(--pico-primary-background);
+    color: var(--pico-primary-inverse);
+}
+
+.servings-display {
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: center;
+}
+
+.servings-original {
+    font-size: 0.85rem;
+    opacity: 0.5;
+}
+
 /* Recipe Source Attribution */
 .recipe-source {
     font-size: 0.85rem;
@@ -974,7 +1021,8 @@ nav ul li a {
 @media print {
     nav, footer, header, .shopping-actions, .mealplan-actions, .mealplan-sidebar,
     .search-bar, .category-tabs, .wake-lock-toggle, .new-recipe-tabs,
-    .home-toolbar, .new-recipe-btn, .pantry-toggle, .trip-tabs, .trip-desc, h2 {
+    .home-toolbar, .new-recipe-btn, .pantry-toggle, .trip-tabs, .trip-desc,
+    .servings-control, h2 {
         display: none !important;
     }
 

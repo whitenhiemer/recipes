@@ -9,7 +9,15 @@
     {{if .Recipe.Image}}
     <img src="/static/img/recipes/{{.Recipe.Image}}" alt="{{.Recipe.Title}}" class="recipe-hero">
     {{end}}
-    <div class="recipe-detail">
+
+    <div class="servings-control">
+        <button type="button" class="servings-btn" onclick="adjustServings(-1)">-</button>
+        <span class="servings-display"><span id="servings-count">5</span> servings</span>
+        <button type="button" class="servings-btn" onclick="adjustServings(1)">+</button>
+        {{if .Recipe.Servings}}<span class="servings-original">(recipe makes {{.Recipe.Servings}})</span>{{end}}
+    </div>
+
+    <div class="recipe-detail" id="recipe-detail">
         {{.Content}}
     </div>
     {{if .Recipe.SourceURL}}
@@ -23,4 +31,147 @@
     </div>
     {{end}}
 </article>
+
+<script id="ingredients-data" type="application/json">{{.IngredientsJSON}}</script>
+<script>
+var DEFAULT_SERVINGS = 5;
+var originalServings = parseServingsFromRecipe();
+var currentServings = DEFAULT_SERVINGS;
+var ingredients = [];
+
+try {
+    ingredients = JSON.parse(document.getElementById('ingredients-data').textContent);
+} catch(e) {}
+
+function parseServingsFromRecipe() {
+    var s = '{{.Recipe.Servings}}';
+    var m = s.match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : 4;
+}
+
+function parseFraction(str) {
+    if (!str) return 0;
+    str = str.trim();
+
+    var unicodeMap = {'\u00bd': 0.5, '\u00bc': 0.25, '\u00be': 0.75, '\u2153': 1/3, '\u2154': 2/3};
+    var total = 0;
+    var parts = str.split(/\s+/);
+
+    for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        if (unicodeMap[p] !== undefined) {
+            total += unicodeMap[p];
+        } else if (p.indexOf('/') !== -1) {
+            var frac = p.split('/');
+            if (frac.length === 2) {
+                var num = parseFloat(frac[0]);
+                var den = parseFloat(frac[1]);
+                if (den !== 0) total += num / den;
+            }
+        } else {
+            var n = parseFloat(p);
+            if (!isNaN(n)) total += n;
+        }
+    }
+    return total;
+}
+
+function toFraction(val) {
+    if (val === 0) return '0';
+    if (val < 0) return '-' + toFraction(-val);
+
+    var whole = Math.floor(val);
+    var frac = val - whole;
+
+    var fractions = [
+        [0.125, '\u215B'], [0.25, '\u00BC'], [0.333, '\u2153'],
+        [0.375, '\u215C'], [0.5, '\u00BD'], [0.625, '\u215D'],
+        [0.667, '\u2154'], [0.75, '\u00BE'], [0.875, '\u215E']
+    ];
+
+    var fracStr = '';
+    if (frac > 0.05) {
+        var best = '';
+        var bestDiff = 1;
+        for (var i = 0; i < fractions.length; i++) {
+            var diff = Math.abs(frac - fractions[i][0]);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = fractions[i][1];
+            }
+        }
+        if (bestDiff < 0.08) {
+            fracStr = best;
+        } else {
+            return val.toFixed(1).replace(/\.0$/, '');
+        }
+    }
+
+    if (whole > 0 && fracStr) return whole + ' ' + fracStr;
+    if (whole > 0) return '' + whole;
+    return fracStr || val.toFixed(1).replace(/\.0$/, '');
+}
+
+function getIngredientLists() {
+    var detail = document.getElementById('recipe-detail');
+    var headings = detail.querySelectorAll('h2');
+    var ingHeading = null;
+    for (var i = 0; i < headings.length; i++) {
+        if (headings[i].textContent.trim().toLowerCase().indexOf('ingredient') === 0) {
+            ingHeading = headings[i];
+            break;
+        }
+    }
+    if (!ingHeading) return [];
+
+    var lists = [];
+    var el = ingHeading.nextElementSibling;
+    while (el && el.tagName !== 'H2') {
+        if (el.tagName === 'UL') lists.push(el);
+        el = el.nextElementSibling;
+    }
+    return lists;
+}
+
+function scaleIngredients() {
+    var ratio = currentServings / originalServings;
+    var lists = getIngredientLists();
+
+    var ingIdx = 0;
+    for (var li = 0; li < lists.length; li++) {
+        var items = lists[li].querySelectorAll('li');
+        for (var j = 0; j < items.length; j++) {
+            if (ingIdx >= ingredients.length) break;
+            var ing = ingredients[ingIdx];
+            if (ing.Quantity) {
+                var origVal = parseFraction(ing.Quantity);
+                if (origVal > 0) {
+                    var scaled = origVal * ratio;
+                    var newQty = toFraction(scaled);
+                    var display = newQty;
+                    if (ing.Unit) display += ' ' + ing.Unit;
+                    display += ' ' + ing.Name;
+                    items[j].textContent = display;
+                }
+            }
+            ingIdx++;
+        }
+    }
+}
+
+function adjustServings(delta) {
+    var next = currentServings + delta;
+    if (next < 1) return;
+    currentServings = next;
+    document.getElementById('servings-count').textContent = currentServings;
+    scaleIngredients();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (ingredients.length > 0) {
+        document.getElementById('servings-count').textContent = currentServings;
+        scaleIngredients();
+    }
+});
+</script>
 {{end}}

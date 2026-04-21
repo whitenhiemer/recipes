@@ -134,6 +134,8 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [x] Meal plan dropdown selects with category-grouped recipe choices
 - [x] Recipe URL import via JSON-LD extraction with source attribution
 - [x] Google recipe search integration on import tab
+- [x] Recipe scaling (default 5 servings, +/- control, fraction display)
+- [x] Fix metadata regex to parse Servings/PrepTime/CookTime from AST text
 
 ### TODO
 
@@ -150,7 +152,6 @@ bash -c "$(cat /path/to/ct-recipe-site.sh)"
 - [ ] PWA manifest for "Add to Home Screen" on mobile
 - [ ] Nutrition info parsing (optional frontmatter field)
 - [ ] Print-optimized recipe detail page
-- [ ] Recipe scaling (multiply ingredient quantities)
 - [ ] Recipe editing/deletion from the web UI
 - [ ] PostgreSQL migration (when needed)
 - [ ] Share recipes via SMS/WhatsApp (Web Share API or Twilio)
