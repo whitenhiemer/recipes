@@ -1,3 +1,6 @@
+---
+tags: []
+---
 # Recipe Name
 
 **Prep Time:** X min | **Cook Time:** X min | **Servings:** X
