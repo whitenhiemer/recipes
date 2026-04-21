@@ -36,6 +36,7 @@ func RowToRecipe(row *RecipeRow) *recipe.Recipe {
 		Instructions: row.Instructions,
 		Notes:        row.Notes,
 		HTMLContent:  row.HTMLContent,
+		SourceURL:    row.SourceURL,
 		ModTime:      row.UpdatedAt,
 	}
 }

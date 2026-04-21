@@ -16,6 +16,7 @@ type Recipe struct {
 	Notes        []string
 	FilePath     string
 	HTMLContent  string
+	SourceURL    string
 	ModTime      time.Time
 }
 

@@ -51,6 +51,7 @@ func migrate(db *sql.DB) error {
 			notes TEXT NOT NULL DEFAULT '[]',
 			markdown TEXT NOT NULL DEFAULT '',
 			html_content TEXT NOT NULL DEFAULT '',
+			source_url TEXT NOT NULL DEFAULT '',
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			UNIQUE(category, slug)
@@ -58,7 +59,13 @@ func migrate(db *sql.DB) error {
 		CREATE INDEX IF NOT EXISTS idx_recipes_slug ON recipes(slug);
 		CREATE INDEX IF NOT EXISTS idx_recipes_category ON recipes(category);
 	`)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Add source_url column if missing (existing databases)
+	db.Exec("ALTER TABLE recipes ADD COLUMN source_url TEXT NOT NULL DEFAULT ''")
+	return nil
 }
 
 type RecipeRow struct {
@@ -76,6 +83,7 @@ type RecipeRow struct {
 	Notes        []string
 	Markdown     string
 	HTMLContent  string
+	SourceURL    string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -95,11 +103,11 @@ func (d *DB) InsertRecipe(r *RecipeRow) (int64, error) {
 
 	result, err := d.db.Exec(`
 		INSERT INTO recipes (slug, title, category, image, prep_time, cook_time, servings,
-			tags, ingredients, instructions, notes, markdown, html_content, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			tags, ingredients, instructions, notes, markdown, html_content, source_url, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		r.Slug, r.Title, r.Category, r.Image, r.PrepTime, r.CookTime, r.Servings,
 		string(tagsJSON), string(ingsJSON), string(instJSON), string(notesJSON),
-		r.Markdown, r.HTMLContent, r.CreatedAt, r.UpdatedAt,
+		r.Markdown, r.HTMLContent, r.SourceURL, r.CreatedAt, r.UpdatedAt,
 	)
 	if err != nil {
 		return 0, err
@@ -116,11 +124,11 @@ func (d *DB) UpdateRecipe(r *RecipeRow) error {
 	_, err := d.db.Exec(`
 		UPDATE recipes SET title=?, image=?, prep_time=?, cook_time=?, servings=?,
 			tags=?, ingredients=?, instructions=?, notes=?, markdown=?, html_content=?,
-			updated_at=?
+			source_url=?, updated_at=?
 		WHERE category=? AND slug=?`,
 		r.Title, r.Image, r.PrepTime, r.CookTime, r.Servings,
 		string(tagsJSON), string(ingsJSON), string(instJSON), string(notesJSON),
-		r.Markdown, r.HTMLContent, r.UpdatedAt,
+		r.Markdown, r.HTMLContent, r.SourceURL, r.UpdatedAt,
 		r.Category, r.Slug,
 	)
 	return err
@@ -134,18 +142,18 @@ func (d *DB) UpsertRecipe(r *RecipeRow) error {
 
 	_, err := d.db.Exec(`
 		INSERT INTO recipes (slug, title, category, image, prep_time, cook_time, servings,
-			tags, ingredients, instructions, notes, markdown, html_content, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			tags, ingredients, instructions, notes, markdown, html_content, source_url, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(category, slug) DO UPDATE SET
 			title=excluded.title, image=excluded.image,
 			prep_time=excluded.prep_time, cook_time=excluded.cook_time, servings=excluded.servings,
 			tags=excluded.tags, ingredients=excluded.ingredients,
 			instructions=excluded.instructions, notes=excluded.notes,
 			markdown=excluded.markdown, html_content=excluded.html_content,
-			updated_at=excluded.updated_at`,
+			source_url=excluded.source_url, updated_at=excluded.updated_at`,
 		r.Slug, r.Title, r.Category, r.Image, r.PrepTime, r.CookTime, r.Servings,
 		string(tagsJSON), string(ingsJSON), string(instJSON), string(notesJSON),
-		r.Markdown, r.HTMLContent, r.CreatedAt, r.UpdatedAt,
+		r.Markdown, r.HTMLContent, r.SourceURL, r.CreatedAt, r.UpdatedAt,
 	)
 	return err
 }
@@ -281,7 +289,7 @@ func (d *DB) queryRecipes(query string, args ...interface{}) ([]*RecipeRow, erro
 			&r.ID, &r.Slug, &r.Title, &r.Category, &r.Image,
 			&r.PrepTime, &r.CookTime, &r.Servings,
 			&tagsJSON, &ingsJSON, &instJSON, &notesJSON,
-			&r.Markdown, &r.HTMLContent,
+			&r.Markdown, &r.HTMLContent, &r.SourceURL,
 			&r.CreatedAt, &r.UpdatedAt,
 		)
 		if err != nil {

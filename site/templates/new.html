@@ -6,6 +6,7 @@
     <div class="new-recipe-tabs">
         <button class="tab-btn active" onclick="switchTab('wizard')">Build Recipe</button>
         <button class="tab-btn" onclick="switchTab('upload')">Upload Markdown</button>
+        <button class="tab-btn" onclick="switchTab('import')">Import from URL</button>
     </div>
 
     <!-- Tab 1: Wizard -->
@@ -166,6 +167,47 @@ image: my-recipe.jpg
         </form>
     </div>
 
+    <!-- Tab 3: Import from URL -->
+    <div id="tab-import" style="display:none">
+        <p class="wizard-hint">Paste a URL from a recipe website. We'll extract the recipe and give credit to the original source.</p>
+
+        <div class="import-search">
+            <label for="import-search-input">Search for a recipe online</label>
+            <div class="import-search-row">
+                <input type="search" id="import-search-input" placeholder="e.g. chicken parmesan" onkeydown="if(event.key==='Enter'){event.preventDefault();searchRecipesOnline();}">
+                <button type="button" onclick="searchRecipesOnline()">Search</button>
+            </div>
+            <div id="import-search-results" class="import-search-results" style="display:none"></div>
+        </div>
+
+        <hr>
+
+        <form id="import-form">
+            <label for="import-url">Recipe URL</label>
+            <input type="url" id="import-url" placeholder="https://www.allrecipes.com/recipe/..." required>
+
+            <label for="import-category">Category</label>
+            <select id="import-category" required>
+                <option value="">Select a category...</option>
+                {{range .Categories}}
+                <option value="{{.}}">{{.}}</option>
+                {{end}}
+            </select>
+
+            <div id="import-preview" style="display:none">
+                <h3>Preview</h3>
+                <pre id="import-preview-text" class="recipe-preview"></pre>
+            </div>
+
+            <div id="import-status" class="import-status" style="display:none"></div>
+
+            <div class="wizard-nav">
+                <button type="button" class="secondary" id="import-fetch-btn" onclick="fetchRecipePreview()">Fetch Recipe</button>
+                <button type="submit" id="import-save-btn" style="display:none">Save Recipe</button>
+            </div>
+        </form>
+    </div>
+
     <div id="wizard-result" style="display:none">
         <p><span id="wizard-success-msg"></span> <a id="wizard-view-link" href="/">View it here</a>.</p>
         <div class="wizard-nav">
@@ -184,6 +226,7 @@ function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-wizard').style.display = tab === 'wizard' ? '' : 'none';
     document.getElementById('tab-upload').style.display = tab === 'upload' ? '' : 'none';
+    document.getElementById('tab-import').style.display = tab === 'import' ? '' : 'none';
     event.target.classList.add('active');
 }
 
@@ -400,5 +443,79 @@ document.getElementById('upload-form').addEventListener('submit', async function
         alert('Error: ' + err.message);
     }
 });
+
+// Import from URL tab
+let importedMarkdown = '';
+
+function setImportStatus(msg, isError) {
+    const el = document.getElementById('import-status');
+    el.textContent = msg;
+    el.style.display = msg ? '' : 'none';
+    el.style.color = isError ? 'var(--pico-del-color)' : '';
+}
+
+async function fetchRecipePreview() {
+    const url = document.getElementById('import-url').value.trim();
+    const category = document.getElementById('import-category').value;
+
+    if (!url) { document.getElementById('import-url').focus(); return; }
+    if (!category) { document.getElementById('import-category').focus(); return; }
+
+    setImportStatus('Fetching recipe...', false);
+    document.getElementById('import-fetch-btn').disabled = true;
+    document.getElementById('import-preview').style.display = 'none';
+    document.getElementById('import-save-btn').style.display = 'none';
+
+    try {
+        const resp = await fetch('/api/recipe/import-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url, category: category })
+        });
+
+        if (!resp.ok) {
+            const err = await resp.text();
+            setImportStatus(err, true);
+            return;
+        }
+
+        const result = await resp.json();
+        importedMarkdown = result.markdown;
+        document.getElementById('import-preview-text').textContent = result.markdown;
+        document.getElementById('import-preview').style.display = '';
+        document.getElementById('import-save-btn').style.display = 'none';
+        setImportStatus('Recipe imported and saved!', false);
+
+        // Already saved by the API, show success
+        document.getElementById('tab-import').style.display = 'none';
+        document.querySelectorAll('.new-recipe-tabs').forEach(function(el) { el.style.display = 'none'; });
+        document.getElementById('wizard-result').style.display = '';
+        document.getElementById('wizard-success-msg').textContent = 'Recipe imported from ' + new URL(url).hostname + '!';
+        document.getElementById('wizard-view-link').href = '/recipes/' + encodeURIComponent(result.category) + '/' + encodeURIComponent(result.slug);
+    } catch (err) {
+        setImportStatus('Error: ' + err.message, true);
+    } finally {
+        document.getElementById('import-fetch-btn').disabled = false;
+    }
+}
+
+document.getElementById('import-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetchRecipePreview();
+});
+
+function searchRecipesOnline() {
+    const query = document.getElementById('import-search-input').value.trim();
+    if (!query) { document.getElementById('import-search-input').focus(); return; }
+
+    const searchURL = 'https://www.google.com/search?q=' + encodeURIComponent(query + ' recipe');
+    window.open(searchURL, '_blank');
+}
+
+function useSearchResult(url) {
+    document.getElementById('import-url').value = url;
+    document.getElementById('import-search-results').style.display = 'none';
+    document.getElementById('import-url').focus();
+}
 </script>
 {{end}}

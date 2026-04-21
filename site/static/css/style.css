@@ -248,6 +248,19 @@
     padding: 0.5rem 0;
 }
 
+/* Recipe Source Attribution */
+.recipe-source {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--pico-muted-border-color);
+}
+
+.recipe-source a {
+    word-break: break-all;
+}
+
 /* Wake lock toggle on recipe pages */
 .wake-lock-toggle {
     display: inline-flex;
@@ -674,6 +687,28 @@ nav ul li a {
     font-size: 0.8rem;
     max-height: 300px;
     overflow-y: auto;
+}
+
+/* Import from URL */
+.import-search-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.import-search-row input {
+    flex: 1;
+}
+
+.import-search-row button {
+    white-space: nowrap;
+    min-height: 48px;
+}
+
+.import-status {
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
 }
 
 /* Pantry & Fridge */

@@ -12,6 +12,11 @@
     <div class="recipe-detail">
         {{.Content}}
     </div>
+    {{if .Recipe.SourceURL}}
+    <div class="recipe-source">
+        Recipe originally from <a href="{{.Recipe.SourceURL}}" target="_blank" rel="noopener noreferrer">{{.Recipe.SourceURL}}</a>
+    </div>
+    {{end}}
     {{if .Recipe.Tags}}
     <div class="tags">
         {{range .Recipe.Tags}}<a href="/tags/{{.}}" class="tag">{{.}}</a>{{end}}
