@@ -46,8 +46,8 @@
 
 <script id="ingredients-data" type="application/json">{{.IngredientsJSON}}</script>
 <script>
-var DEFAULT_SERVINGS = 5;
 var originalServings = parseServingsFromRecipe();
+var DEFAULT_SERVINGS = originalServings <= 2 ? originalServings : 5;
 var currentServings = DEFAULT_SERVINGS;
 var ingredients = [];
 
