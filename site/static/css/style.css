@@ -244,6 +244,42 @@
     padding: 0.4rem 0;
 }
 
+.recipe-detail ul li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.recipe-detail ul li .have-it-btn {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--pico-muted-color);
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.4;
+    margin-left: auto;
+}
+
+.recipe-detail ul li .have-it-btn:hover {
+    border-color: var(--pico-primary);
+    color: var(--pico-primary);
+}
+
+.recipe-detail ul li .have-it-btn.active {
+    background: var(--pico-ins-color);
+    border-color: var(--pico-ins-color);
+    color: #fff;
+}
+
+.recipe-detail ul li.on-hand {
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
 .recipe-detail ol li {
     padding: 0.5rem 0;
 }

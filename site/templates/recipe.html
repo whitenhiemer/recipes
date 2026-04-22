@@ -55,12 +55,15 @@ try {
     ingredients = JSON.parse(document.getElementById('ingredients-data').textContent);
 } catch(e) {}
 
+// Extract the numeric servings count from the recipe's metadata string.
 function parseServingsFromRecipe() {
     var s = '{{.Recipe.Servings}}';
     var m = s.match(/(\d+)/);
     return m ? parseInt(m[1], 10) : 4;
 }
 
+// Parse a quantity string that may contain whole numbers, unicode
+// fractions (e.g. "1 1/2", "1/4", "\u00bd"), and return a decimal.
 function parseFraction(str) {
     if (!str) return 0;
     str = str.trim();
@@ -88,6 +91,9 @@ function parseFraction(str) {
     return total;
 }
 
+// Convert a decimal quantity back to a human-friendly string using
+// unicode fraction characters (e.g. 1.5 -> "1 \u00bd"). Falls back
+// to one decimal place if no close fraction match is found.
 function toFraction(val) {
     if (val === 0) return '0';
     if (val < 0) return '-' + toFraction(-val);
@@ -124,6 +130,9 @@ function toFraction(val) {
     return fracStr || val.toFixed(1).replace(/\.0$/, '');
 }
 
+// Find all <ul> elements under the "Ingredients" heading, stopping
+// at the next <h2>. This captures ingredient lists including those
+// under subsection <h3> headers (e.g. "### Steaks", "### Gravy").
 function getIngredientLists() {
     var detail = document.getElementById('recipe-detail');
     var headings = detail.querySelectorAll('h2');
@@ -145,6 +154,9 @@ function getIngredientLists() {
     return lists;
 }
 
+// Rewrite each ingredient <li> with quantities scaled to the current
+// servings count. Uses the parsed ingredients JSON for quantity/unit/name
+// and applies the ratio currentServings / originalServings.
 function scaleIngredients() {
     var ratio = currentServings / originalServings;
     var lists = getIngredientLists();
@@ -171,6 +183,7 @@ function scaleIngredients() {
     }
 }
 
+// Increment or decrement the servings count and re-scale all ingredients.
 function adjustServings(delta) {
     var next = currentServings + delta;
     if (next < 1) return;
@@ -179,11 +192,98 @@ function adjustServings(delta) {
     scaleIngredients();
 }
 
+// Shared localStorage key with shopping.html — items marked here
+// appear as "on hand" in the shopping list and can be filtered out.
+var PANTRY_KEY = 'recipe-pantry-inventory';
+
+// Read the pantry inventory from localStorage. Returns an array of
+// { name: string } objects, or [] if nothing is stored.
+function getPantry() {
+    var data = localStorage.getItem(PANTRY_KEY);
+    if (!data) return [];
+    try { return JSON.parse(data); } catch(e) { return []; }
+}
+
+// Persist the pantry inventory array back to localStorage.
+function savePantry(items) {
+    localStorage.setItem(PANTRY_KEY, JSON.stringify(items));
+}
+
+// Case-insensitive check for whether an ingredient name is already
+// in the pantry inventory.
+function pantryHas(name) {
+    var items = getPantry();
+    var lower = name.toLowerCase();
+    for (var i = 0; i < items.length; i++) {
+        if (items[i].name.toLowerCase() === lower) return true;
+    }
+    return false;
+}
+
+// Toggle an ingredient in/out of the pantry. Updates the button label,
+// the li's visual state, and persists to localStorage so the shopping
+// list page picks it up.
+function togglePantryItem(name, btn) {
+    var items = getPantry();
+    var lower = name.toLowerCase();
+    var found = -1;
+    for (var i = 0; i < items.length; i++) {
+        if (items[i].name.toLowerCase() === lower) { found = i; break; }
+    }
+    if (found >= 0) {
+        items.splice(found, 1);
+        btn.classList.remove('active');
+        btn.textContent = 'have it';
+        btn.closest('li').classList.remove('on-hand');
+    } else {
+        items.push({ name: name });
+        btn.classList.add('active');
+        btn.textContent = 'on hand';
+        btn.closest('li').classList.add('on-hand');
+    }
+    savePantry(items);
+}
+
+// Inject "have it" / "on hand" toggle buttons into each ingredient <li>.
+// Uses the parsed ingredient Name when available (matches what the
+// shopping list generates), falls back to raw li text for unstructured
+// ingredients like "salt and pepper, to taste".
+function addHaveItButtons() {
+    var lists = getIngredientLists();
+    var ingIdx = 0;
+    for (var li = 0; li < lists.length; li++) {
+        var items = lists[li].querySelectorAll('li');
+        for (var j = 0; j < items.length; j++) {
+            var name = '';
+            if (ingIdx < ingredients.length && ingredients[ingIdx].Name) {
+                name = ingredients[ingIdx].Name;
+            } else {
+                name = items[j].textContent.trim();
+            }
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'have-it-btn';
+            var onHand = pantryHas(name);
+            btn.textContent = onHand ? 'on hand' : 'have it';
+            if (onHand) {
+                btn.classList.add('active');
+                items[j].classList.add('on-hand');
+            }
+            (function(n, b) {
+                b.addEventListener('click', function() { togglePantryItem(n, b); });
+            })(name, btn);
+            items[j].appendChild(btn);
+            ingIdx++;
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     if (ingredients.length > 0) {
         document.getElementById('servings-count').textContent = currentServings;
         scaleIngredients();
     }
+    addHaveItButtons();
 });
 </script>
 {{end}}
