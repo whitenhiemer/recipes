@@ -29,10 +29,10 @@ install_deps() {
     apt-get update -qq
 
     info "Installing dependencies..."
+    # Go is installed separately (official tarball) -- apt's golang-go is too old
     apt-get install -y -qq \
         nginx \
         git \
-        golang-go \
         sqlite3 \
         certbot \
         python3-certbot-nginx \
