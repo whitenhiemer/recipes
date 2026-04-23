@@ -7,6 +7,7 @@
 set -eEuo pipefail
 
 REPO_URL="${1:-https://github.com/whitenhiemer/recipes.git}"
+APP="Recipe Site"
 APP_DIR="/opt/recipe-site"
 REPO_DIR="${APP_DIR}/repo"
 DATA_DIR="${APP_DIR}/data"
@@ -75,7 +76,7 @@ clone_repo() {
 build_app() {
     info "Building Go application..."
     cd "$REPO_DIR/site"
-    go build -o "$BIN_PATH" .
+    go build -buildvcs=false -o "$BIN_PATH" .
     chown recipe-site:recipe-site "$BIN_PATH"
     info "Binary built at $BIN_PATH"
 }
