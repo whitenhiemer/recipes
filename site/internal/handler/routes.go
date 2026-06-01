@@ -36,6 +36,7 @@ func Register(mux *http.ServeMux, idx *recipe.Index, cfg *config.Config, db *sto
 	mux.HandleFunc("POST /api/recipe", s.handleCreateRecipeAPI)
 	mux.HandleFunc("POST /api/recipe/import-url", s.handleImportURL)
 	mux.HandleFunc("POST /api/recipe/search-online", s.handleRecipeSearch)
+	mux.HandleFunc("POST /api/recipe/generate", s.handleGenerateRecipe)
 	mux.HandleFunc("POST /api/image", s.handleImageUpload)
 	mux.HandleFunc("POST /webhook", s.handleWebhook)
 

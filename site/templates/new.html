@@ -7,6 +7,7 @@
         <button class="tab-btn active" onclick="switchTab('wizard')">Build Recipe</button>
         <button class="tab-btn" onclick="switchTab('upload')">Upload Markdown</button>
         <button class="tab-btn" onclick="switchTab('import')">Import from URL</button>
+        <button class="tab-btn" onclick="switchTab('generate')">Generate with AI</button>
     </div>
 
     <!-- Tab 1: Wizard -->
@@ -208,6 +209,36 @@ image: my-recipe.jpg
         </form>
     </div>
 
+    <!-- Tab 4: Generate with AI -->
+    <div id="tab-generate" style="display:none">
+        <p class="wizard-hint">Describe what you want to cook and we'll generate a complete recipe.</p>
+
+        <form id="generate-form">
+            <label for="gen-prompt">What do you want to cook?</label>
+            <textarea id="gen-prompt" rows="3" placeholder="e.g. A creamy pasta with mushrooms and spinach, something quick on a weeknight" required></textarea>
+
+            <label for="gen-category">Category</label>
+            <select id="gen-category">
+                <option value="">Let AI decide...</option>
+                {{range .Categories}}
+                <option value="{{.}}">{{.}}</option>
+                {{end}}
+            </select>
+
+            <div id="gen-status" style="display:none"></div>
+
+            <div id="gen-preview" style="display:none">
+                <label>Generated Recipe — review before saving</label>
+                <textarea id="gen-markdown" rows="24" style="font-family: monospace; font-size: 0.85em;"></textarea>
+            </div>
+
+            <div class="wizard-nav">
+                <button type="submit" id="gen-btn">Generate</button>
+                <button type="button" id="gen-save-btn" style="display:none" onclick="saveGeneratedRecipe()">Save Recipe</button>
+            </div>
+        </form>
+    </div>
+
     <div id="wizard-result" style="display:none">
         <p><span id="wizard-success-msg"></span> <a id="wizard-view-link" href="/">View it here</a>.</p>
         <div class="wizard-nav">
@@ -227,6 +258,7 @@ function switchTab(tab) {
     document.getElementById('tab-wizard').style.display = tab === 'wizard' ? '' : 'none';
     document.getElementById('tab-upload').style.display = tab === 'upload' ? '' : 'none';
     document.getElementById('tab-import').style.display = tab === 'import' ? '' : 'none';
+    document.getElementById('tab-generate').style.display = tab === 'generate' ? '' : 'none';
     event.target.classList.add('active');
 }
 
@@ -578,6 +610,100 @@ function useSearchResult(url) {
     document.getElementById('import-url').value = url;
     document.getElementById('import-search-results').style.display = 'none';
     document.getElementById('import-url').focus();
+}
+
+// Generate with AI tab
+document.getElementById('generate-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const prompt = document.getElementById('gen-prompt').value.trim();
+    const category = document.getElementById('gen-category').value;
+    const statusEl = document.getElementById('gen-status');
+    const previewEl = document.getElementById('gen-preview');
+    const btn = document.getElementById('gen-btn');
+    const saveBtn = document.getElementById('gen-save-btn');
+
+    if (!prompt) { document.getElementById('gen-prompt').focus(); return; }
+
+    statusEl.textContent = 'Generating recipe...';
+    statusEl.style.display = '';
+    statusEl.style.color = '';
+    previewEl.style.display = 'none';
+    saveBtn.style.display = 'none';
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch('/api/recipe/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: prompt, category: category })
+        });
+
+        if (!resp.ok) {
+            const err = await resp.text();
+            statusEl.textContent = 'Error: ' + err;
+            statusEl.style.color = 'var(--pico-del-color)';
+            return;
+        }
+
+        const result = await resp.json();
+        document.getElementById('gen-markdown').value = result.markdown;
+        previewEl.style.display = '';
+        saveBtn.style.display = '';
+        statusEl.style.display = 'none';
+    } catch (err) {
+        statusEl.textContent = 'Error: ' + err.message;
+        statusEl.style.color = 'var(--pico-del-color)';
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+async function saveGeneratedRecipe() {
+    const markdown = document.getElementById('gen-markdown').value.trim();
+    const category = document.getElementById('gen-category').value || 'dinners';
+    const saveBtn = document.getElementById('gen-save-btn');
+    const statusEl = document.getElementById('gen-status');
+
+    const titleMatch = markdown.match(/^#\s+(.+)$/m);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    if (!title) {
+        statusEl.textContent = 'Could not find a recipe title in the markdown. Make sure it starts with "# Recipe Name".';
+        statusEl.style.color = 'var(--pico-del-color)';
+        statusEl.style.display = '';
+        return;
+    }
+
+    saveBtn.disabled = true;
+    statusEl.textContent = 'Saving...';
+    statusEl.style.color = '';
+    statusEl.style.display = '';
+
+    try {
+        const resp = await fetch('/api/recipe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, category: category, markdown: markdown })
+        });
+
+        if (resp.ok) {
+            const result = await resp.json();
+            document.getElementById('tab-generate').style.display = 'none';
+            document.querySelectorAll('.new-recipe-tabs').forEach(el => el.style.display = 'none');
+            document.getElementById('wizard-result').style.display = '';
+            document.getElementById('wizard-success-msg').textContent = 'Recipe generated and saved!';
+            document.getElementById('wizard-view-link').href = '/recipes/' + encodeURIComponent(result.category) + '/' + encodeURIComponent(result.slug);
+        } else {
+            const err = await resp.text();
+            statusEl.textContent = 'Error saving: ' + err;
+            statusEl.style.color = 'var(--pico-del-color)';
+        }
+    } catch (err) {
+        statusEl.textContent = 'Error: ' + err.message;
+        statusEl.style.color = 'var(--pico-del-color)';
+    } finally {
+        saveBtn.disabled = false;
+    }
 }
 </script>
 {{end}}
